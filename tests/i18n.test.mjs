@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {translateText,setLanguage,getLanguage,getLocale} from '../dist/i18n.js';
+import {translations} from '../dist/translations.js';
+import {prepare,seed,total} from '../dist/core.js';
+test('Russian copy is preserved; Kazakh and English cover every interface dictionary entry',()=>{for(const [ru,row] of Object.entries(translations)){assert.equal(translateText(ru,'ru'),ru);assert(row.kk?.trim());assert(row.en?.trim());}assert.equal(translateText('Найти исполнителя','en'),'Find a professional');assert.equal(translateText('Найти исполнителя','kk'),'Орындаушыны табу');});
+test('Translation respects phrase boundaries, uppercase and unknown content',()=>{assert.equal(translateText('Мой уникальный объект №123','en'),'Мой уникальный объект №123');assert.equal(translateText('НА СОГЛАСОВАНИИ','en'),'AWAITING APPROVAL');assert.equal(translateText('Рабочее пространство','en'),'Workspace');assert.equal(translateText('Проектирование','en'),'Проектирование');});
+test('Language state has a validated locale and never changes domain enum values',()=>{setLanguage('kk');assert.equal(getLanguage(),'kk');assert.equal(getLocale(),'kk-KZ');assert.throws(()=>setLanguage('invalid'));assert.equal(getLanguage(),'kk');setLanguage('ru');assert.equal(translateText('pending approved draft','en'),'pending approved draft');});
+test('Three-language descriptions use the same catalog prices and quantities',()=>{const prices=seed().prices;for(const input of ['Выровнять 20 м2 стен; грунтовка 20 м2','Қабырғаны тегістеу 20 м2 және қабырғаны астарлау 20 м2','Wall leveling 20 m2 and wall priming 20 sqm']){const r=prepare(input,prices);assert.equal(r.unresolved.length,0,input);assert.equal(total(r.lines),58000,input);}});
+test('Other languages cannot bypass explicit quantities or invent prices',()=>{const prices=seed().prices;for(const input of ['Install a pool 1 pcs','Бассейн орнату 1 дана'])assert.equal(prepare(input,prices).lines.length,0);assert.equal(prepare('Wall leveling 20 m2 and wall priming',prices).unresolved.length,1);assert.equal(prepare('Қабырғаны тегістеу -20 м2',prices).lines.length,0);});

@@ -63,7 +63,7 @@ const server=http.createServer(async(req,res)=>{
   return send(404,{error:'Не найдено'});
  }
  if(req.method!=='GET'&&req.method!=='HEAD')return send(405,{error:'Метод не поддерживается'});
- const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/core.js':'core.js','/market.js':'market.js','/market-ui.js':'market-ui.js','/style.css':'style.css','/market.css':'market.css'};
+ const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/core.js':'core.js','/market.js':'market.js','/market-ui.js':'market-ui.js','/style.css':'style.css','/market.css':'market.css','/i18n.js':'i18n.js','/translations.js':'translations.js'};
  if(!files[url.pathname])return send(404,{error:'Не найдено'});
  const file=files[url.pathname],ext=path.extname(file);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css'})[ext]+'; charset=utf-8','Cache-Control':'no-cache','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"});res.end(req.method==='HEAD'?'':readFileSync(path.join(root,'dist',file)));
  }catch(e){console.error(e.message);if(!res.headersSent)send(500,{error:'Ошибка сервера. Данные не изменены.'});else res.end();}

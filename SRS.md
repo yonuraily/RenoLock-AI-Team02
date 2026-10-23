@@ -1,6 +1,16 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.1 · MVP · 17 October 2026
+Version 1.2 · MVP · 23 October 2026
+
+## Version 1.2 Language Support
+
+FR-27: The interface supports Russian, Kazakh and English. A persistent language selector is available on authentication pages, workspaces and dialogs. Local selection is stored in the browser. Translation covers interface labels, navigation, filters, workflow statuses, hints, decision dialogs, validation messages and report headings. Stored project names, addresses, profile descriptions, reviews and other author text are not machine-translated.
+
+FR-28: Switching languages must preserve in-progress form values and canonical filter/option/API values. Language switching changes presentation without rebuilding forms. Catalog calculations and approval permissions do not depend on the display language. The document language and accessible labels follow the selection.
+
+FR-29: The standard sample work catalog accepts supported Russian, Kazakh and English phrases and quantity units. Custom work still relies on contractor-provided aliases. Speech recognition requests ru-RU, kk-KZ or en-US and retains browser-provider availability constraints. Unknown work and missing quantities must still be refused in every supported language.
+
+Validation: 32 tests pass. Browser checks verified all three authentication/catalog languages, filtering after translation and retention of a request title and renovation class while switching languages inside a dialog.
 
 ## Version 1.1 Marketplace Extension
 

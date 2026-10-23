@@ -10,15 +10,23 @@ const assert=(condition,message)=>{if(!condition)throw Error(message);};
 const text=(s,max=200)=>{assert(typeof s==='string'&&s.trim().length>0&&s.length<=max,'Проверьте текстовые поля');return s.trim();};
 const number=(v,max=1e9)=>{assert(typeof v==='number'&&Number.isFinite(v)&&v>0&&v<=max,'Значение должно быть положительным числом');return v;};
 const norm=s=>s.toLowerCase().replaceAll('ё','е').replace(/²/g,'2').replace(/\s+/g,' ').trim();
+const languageAliases={
+ 'Выравнивание стен':['wall leveling','level walls','leveling walls','қабырғаны тегістеу','қабырғаларды тегістеу'],
+ 'Грунтовка стен':['wall priming','prime walls','priming walls','қабырғаны астарлау','қабырғаларды астарлау'],
+ 'Покраска стен':['wall painting','paint walls','painting walls','қабырғаны бояу','қабырғаларды бояу'],
+ 'Установка розетки':['socket installation','install sockets','install socket','розетка орнату'],
+ 'Укладка плитки':['tile installation','tile laying','lay tiles','плитка төсеу'],
+ 'Прокладка кабеля':['cable installation','lay cable','кабель тарту']
+};
 export function prepare(description,prices){
   text(description,5000);
   const lines=[],unresolved=[];
   // Each clause needs its own explicit quantity. Never infer one from another work item.
-  const clauses=norm(description).split(/(?<!\d),(?!\d)|[;\n]|\s+и\s+/).map(s=>s.trim()).filter(Boolean);
+  const clauses=norm(description).split(/(?<!\d),(?!\d)|[;\n]|\s+(?:и|and|және)\s+/).map(s=>s.trim()).filter(Boolean);
   for(const clause of clauses){
-    const matches=prices.filter(p=>p.active&&[p.name,...p.aliases].some(a=>clause.includes(norm(a))));
+    const matches=prices.filter(p=>p.active&&[p.name,...p.aliases,...(languageAliases[p.name]||[])].some(a=>clause.includes(norm(a))));
     if(matches.length!==1){unresolved.push({text:clause,reason:matches.length?'Неоднозначная работа — выберите позицию вручную':'Работа отсутствует в прайсе'});continue;}
-    const p=matches[0], unit=p.unit==='м²'?'(?:м2|м\\^2|кв\\.?\\s*м)':p.unit==='м'?'(?:м(?!2)|метр(?:а|ов)?)':'(?:шт\\.?|штук(?:а|и)?)';
+    const p=matches[0], unit=p.unit==='м²'?'(?:м2|m2|м\\^2|m\\^2|sq\\.?\\s*m|sqm|square meters?|шаршы метр|кв\\.?\\s*м)':p.unit==='м'?'(?:м(?!2)|m(?!2)|meters?|метр(?:а|ов)?)':'(?:шт\\.?|штук(?:а|и)?|pcs|pieces?|дана)';
     const quantities=/-\s*\d/.test(clause)?[]:[...clause.matchAll(new RegExp('(?<![\\d.,-])(\\d+(?:[.,]\\d+)?)\\s*'+unit+'(?=\\s|$|[.,])','g'))];
     if(quantities.length!==1){unresolved.push({text:clause,reason:'Укажите один объём и единицу: например, 20 '+p.unit});continue;}
     const qty=Number(quantities[0][1].replace(',','.'));

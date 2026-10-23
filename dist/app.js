@@ -1,3 +1,4 @@
+import {initI18n,getLanguage,getLocale} from './i18n.js';
 import {seed,view,mutate,statuses,money,total,budget,uid,ensureMarketplace} from './core.js';
 import {createMarketplace} from './market-ui.js';
 const app=document.querySelector('#app'),modal=document.querySelector('#modal');
@@ -6,7 +7,7 @@ const paths={grid:'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',folder:'M
 const icon=(name,size=18)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.file}"/></svg>`;
 const brand=()=>`<div class="brand"><span class="brand-mark">${icon('shield',23)}</span>RenoLock <em>AI</em></div>`;
 const badge=s=>`<span class="badge ${s}">${statuses[s]||esc(s)}</span>`;
-const date=s=>new Intl.DateTimeFormat('ru',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(s));
+const date=s=>new Intl.DateTimeFormat(getLocale(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(s));
 let serverMode=false,state=null,local=null,route={page:'overview'},filter='all',search='',editor=null,register=false,busy=false;
 const toast=(message,error=false)=>{const el=document.querySelector('#toast');el.textContent=message;el.className='show'+(error?' error':'');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.className='',5000);};
 async function api(path,data){let res;try{res=await fetch('/api/'+path,{method:data?'POST':'GET',credentials:'same-origin',headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});}catch{throw Error('Нет связи с сервером. Проверьте подключение и повторите действие.');}let json;try{json=await res.json();}catch{throw Error('Сервер вернул некорректный ответ');}if(!res.ok)throw Error(json.error||'Ошибка запроса');return json;}
@@ -66,7 +67,7 @@ function priceModal(p){openModal(p?'Редактировать расценку'
 function importModal(){openModal('Импорт прайс-листа CSV',`<p class="muted" style="font-size:12px">UTF-8, разделитель «;». Первая строка: name;unit;price;aliases. Единицы: м², м, шт. Импорт добавляет новые позиции.</p><form id="import-form"><label class="field">CSV файл<input type="file" id="csv-file" accept=".csv,text/csv" required></label><div class="notice">Пример:<br>name;unit;price;aliases<br>Штукатурка стен;м²;2200;штукатурка,оштукатурить</div><div class="form-error" id="modal-error" role="alert"></div><div class="modal-actions"><button class="btn" type="button" data-act="modal-close">Отмена</button><button class="btn primary">Импортировать</button></div></form>`);}
 async function loginDemo(role){if(serverMode){await api('auth',{email:role+'@renolock.demo',password:'RenoDemo2026!'});await refresh();}else{local=loadLocal();state=view(local,local.users.find(u=>u.role===role));sessionStorage.setItem('renolock-demo-user',state.user.id);}route={page:role==='client'?'catalog':'requests'};render();}
 let recognition;
-function voice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast('Голосовой ввод недоступен',true);if(recognition){recognition.stop();return;}const button=document.querySelector('#voice-button'),status=document.querySelector('#voice-status');const r=new SR();recognition=r;r.lang='ru-RU';r.interimResults=false;r.continuous=false;button.textContent='Остановить запись';status.textContent='Слушаем… Сервис браузера может обрабатывать аудио через интернет.';r.onresult=event=>{const input=document.querySelector('#editor-description');if(input){input.value+=(input.value?'\n':'')+event.results[0][0].transcript;syncEditor();}status.textContent='Текст добавлен. Проверьте распознавание перед расчётом.';};r.onerror=e=>status.textContent='Не удалось распознать речь ('+e.error+'). Используйте текстовый ввод.';r.onend=()=>{recognition=null;button.innerHTML=icon('mic',15)+' Голосовой ввод';};try{r.start();}catch{recognition=null;button.innerHTML=icon('mic',15)+' Голосовой ввод';status.textContent='Микрофон недоступен. Введите текст вручную.';}}
+function voice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return toast('Голосовой ввод недоступен',true);if(recognition){recognition.stop();return;}const button=document.querySelector('#voice-button'),status=document.querySelector('#voice-status');const r=new SR();recognition=r;r.lang=({ru:'ru-RU',kk:'kk-KZ',en:'en-US'})[getLanguage()];r.interimResults=false;r.continuous=false;button.textContent='Остановить запись';status.textContent='Слушаем… Сервис браузера может обрабатывать аудио через интернет.';r.onresult=event=>{const input=document.querySelector('#editor-description');if(input){input.value+=(input.value?'\n':'')+event.results[0][0].transcript;syncEditor();}status.textContent='Текст добавлен. Проверьте распознавание перед расчётом.';};r.onerror=e=>status.textContent='Не удалось распознать речь ('+e.error+'). Используйте текстовый ввод.';r.onend=()=>{recognition=null;button.innerHTML=icon('mic',15)+' Голосовой ввод';};try{r.start();}catch{recognition=null;button.innerHTML=icon('mic',15)+' Голосовой ввод';status.textContent='Микрофон недоступен. Введите текст вручную.';}}
 document.addEventListener('click',async event=>{
  const button=event.target.closest('button');if(!button)return;
  if(button.dataset.go){if(recognition)recognition.stop();go(button.dataset.go,{id:button.dataset.id});return;}
@@ -89,7 +90,7 @@ document.addEventListener('click',async event=>{
  case 'price-import':importModal();break;
  case 'estimate-new':startEditor(button.dataset.project);break;
  case 'estimate-edit':startEditor(null,state.estimates.find(e=>e.id===button.dataset.id));break;
- case 'example':document.querySelector('#editor-description').value='Выровнять 20 м2 стен; грунтовка 20 м2';document.querySelector('#editor-title').value||= 'Подготовка стен в гостиной';syncEditor();break;
+ case 'example':document.querySelector('#editor-description').value=({ru:'Выровнять 20 м2 стен; грунтовка 20 м2',kk:'Қабырғаны тегістеу 20 м2; қабырғаны астарлау 20 м2',en:'Wall leveling 20 m2; wall priming 20 m2'})[getLanguage()];document.querySelector('#editor-title').value||= ({ru:'Подготовка стен в гостиной',kk:'Қонақ бөлме қабырғаларын дайындау',en:'Living room wall preparation'})[getLanguage()];syncEditor();break;
  case 'voice':voice();break;
  case 'prepare':{syncEditor();if(editor.lines.length){openModal('Заменить позиции черновика?',`<p>Повторная подготовка заменит текущие позиции результатом разбора описания. Название и описание сохранятся.</p><div class="modal-actions"><button class="btn" data-act="modal-close">Отмена</button><button class="btn primary" data-act="prepare-confirm">Заменить позиции</button></div>`);break;}await prepareEditor();break;}
  case 'prepare-confirm':modal.close();await prepareEditor();break;
@@ -132,4 +133,17 @@ document.addEventListener('submit',async event=>{
 const marketplace=createMarketplace({state:()=>state,serverMode:()=>serverMode,simulate:id=>{if(serverMode)throw Error("Недоступно на сервере");state=view(local,local.users.find(u=>u.id===id));sessionStorage.setItem("renolock-demo-user",id);go("requests");},esc,icon,money,total,heading,empty,openModal,toast,action,refresh,render,go,closeModal:()=>modal.close(),addBaseline,readBaseline,linesTable});
 async function init(){try{const res=await fetch('/api/health');const data=await res.json();serverMode=data.mode==='server';}catch{serverMode=false;}
  if(serverMode){try{await refresh();}catch{}render();}else{local=loadLocal();const id=sessionStorage.getItem('renolock-demo-user');if(id&&local.users.some(u=>u.id===id))state=view(local,local.users.find(u=>u.id===id));render();}}
+initI18n({protectedTexts:()=>{
+ const result=new Set();if(!state)return result;
+ const add=(record,keys)=>{for(const key of keys)if(typeof record?.[key]==='string')result.add(record[key].trim());};
+ add(state.user,['name','email']);
+ for(const p of state.projects||[]){add(p,['name','address','clientEmail']);for(const l of p.baseline)add(l,['name']);}
+ for(const e of state.estimates||[]){add(e,['title','description']);for(const l of e.lines)add(l,['name','overrideReason']);}
+ for(const p of state.prices||[])add(p,['name']);
+ for(const p of state.profiles||[]){add(p,['name','bio']);for(const w of p.portfolio)add(w,['title','description']);}
+ for(const r of state.reviews||[])add(r,['text','author']);
+ for(const r of state.requests||[]){add(r,['title','address','description','clientName','contractorName']);add(r.quote,['comment']);for(const event of r.events)add(event,['actor','comment']);}
+ for(const l of state.logs||[])add(l,['actor','comment']);return result;
+}});
+document.addEventListener('renolock-language-change',()=>{if(recognition)recognition.stop();});
 init();
