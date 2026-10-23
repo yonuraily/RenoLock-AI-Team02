@@ -1,3 +1,5 @@
+import {ensureMarketplace,marketplaceView,marketMutate} from './market.js';
+export {ensureMarketplace};
 export const uid = () => globalThis.crypto.randomUUID();
 export const now = () => new Date().toISOString();
 export const statuses = {draft:'Черновик',pending:'На согласовании',approved:'Согласовано',rejected:'Отклонено',changes:'Нужны изменения'};
@@ -36,12 +38,15 @@ export function seed(){
  return {users:[contractor,client],projects,prices,estimates,logs};
 }
 export function view(state,user){
+ ensureMarketplace(state);
  const projects=state.projects.filter(p=>p.contractorId===user.id||p.clientId===user.id),ids=new Set(projects.map(p=>p.id));
  const estimates=state.estimates.filter(e=>ids.has(e.projectId)&&(user.role==='contractor'||e.status!=='draft'));
  const estimateIds=new Set(estimates.map(e=>e.id));
- return {user,projects,estimates,prices:user.role==='contractor'?state.prices.filter(p=>p.ownerId===user.id):[],logs:state.logs.filter(l=>ids.has(l.projectId)&&(user.role==='contractor'||estimateIds.has(l.estimateId)||!l.estimateId)),people:state.users.filter(u=>projects.some(p=>[p.contractorId,p.clientId].includes(u.id))).map(({id,name,role})=>({id,name,role}))};
+ return {...marketplaceView(state,user),user,projects,estimates,prices:user.role==='contractor'?state.prices.filter(p=>p.ownerId===user.id):[],logs:state.logs.filter(l=>ids.has(l.projectId)&&(user.role==='contractor'||estimateIds.has(l.estimateId)||!l.estimateId)),people:state.users.filter(u=>projects.some(p=>[p.contractorId,p.clientId].includes(u.id))).map(({id,name,role})=>({id,name,role}))};
 }
 export function mutate(state,user,action,data){
+ ensureMarketplace(state);
+ if(/^(profile\.|portfolio\.|request\.|review\.|project\.complete$)/.test(action))return marketMutate(state,user,action,data);
  const contractor=()=>assert(user.role==='contractor','Доступно только подрядчику');
  const project=id=>{const p=state.projects.find(p=>p.id===id);assert(p&&(p.contractorId===user.id||p.clientId===user.id),'Проект недоступен');return p;};
  const audit=(p,e,action,comment='')=>state.logs.push({id:uid(),projectId:p.id,estimateId:e?.id||null,actor:user.name,action,comment,revision:e?.revision||1,amount:e?total(e.lines):total(p.baseline),snapshot:structuredClone(e?.lines||p.baseline),at:now()});
@@ -64,6 +69,7 @@ export function mutate(state,user,action,data){
  if(action==='estimate.prepare'){contractor();project(data.projectId);return prepare(data.description,state.prices.filter(p=>p.ownerId===user.id));}
  if(action==='estimate.save'){
   contractor();const p=project(data.projectId);assert(p.contractorId===user.id,'Нет доступа');
+  assert(!p.completedAt,'Проект завершён');
   const e=data.id?state.estimates.find(e=>e.id===data.id&&e.projectId===p.id):null;assert(!data.id||e,'Смета не найдена');assert(!e||['draft','changes'].includes(e.status),'Эту смету нельзя редактировать');assert(!e||e.revision===data.revision,'Смета уже изменена — обновите страницу');
   const values={title:text(data.title),description:text(data.description,5000),lines:validateLines(data.lines),updatedAt:now()};
   if(e){Object.assign(e,values,{revision:e.revision+1});audit(p,e,'saved','Черновик изменён');return e;}

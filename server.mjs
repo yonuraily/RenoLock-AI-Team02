@@ -4,7 +4,7 @@ import {scryptSync,randomBytes,timingSafeEqual,createHash} from 'node:crypto';
 import {readFileSync,mkdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {seed,view,mutate,uid} from './dist/core.js';
+import {seed,view,mutate,uid,ensureMarketplace} from './dist/core.js';
 const root=path.dirname(fileURLToPath(import.meta.url));
 const folder=process.env.RENOLOCK_DATA||path.join(root,'data');mkdirSync(folder,{recursive:true});
 const db=new DatabaseSync(path.join(folder,'renolock.sqlite'));
@@ -16,6 +16,8 @@ if(!db.prepare('SELECT id FROM state').get()){
  const s=seed();save(s);for(const u of s.users){const salt=randomBytes(16).toString('hex');db.prepare('INSERT INTO credentials VALUES(?,?,?)').run(u.email,hash('RenoDemo2026!',salt),salt);}
 }
 const digest=s=>createHash('sha256').update(s).digest('hex');
+// Idempotent schema extension preserves existing projects and approvals.
+{const s=load();ensureMarketplace(s);save(s);for(const u of s.users.filter(u=>u.id.endsWith('-demo'))){if(!db.prepare('SELECT email FROM credentials WHERE email=?').get(u.email)){const salt=randomBytes(16).toString('hex');db.prepare('INSERT INTO credentials VALUES(?,?,?)').run(u.email,hash('RenoDemo2026!',salt),salt);}}}
 const port=Number(process.env.PORT||4173),host=process.env.HOST||'127.0.0.1';
 const attempts=new Map();
 const cleanUser=({id,name,email,role})=>({id,name,email,role});
@@ -61,7 +63,7 @@ const server=http.createServer(async(req,res)=>{
   return send(404,{error:'Не найдено'});
  }
  if(req.method!=='GET'&&req.method!=='HEAD')return send(405,{error:'Метод не поддерживается'});
- const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/core.js':'core.js','/style.css':'style.css'};
+ const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/core.js':'core.js','/market.js':'market.js','/market-ui.js':'market-ui.js','/style.css':'style.css','/market.css':'market.css'};
  if(!files[url.pathname])return send(404,{error:'Не найдено'});
  const file=files[url.pathname],ext=path.extname(file);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css'})[ext]+'; charset=utf-8','Cache-Control':'no-cache','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"});res.end(req.method==='HEAD'?'':readFileSync(path.join(root,'dist',file)));
  }catch(e){console.error(e.message);if(!res.headersSent)send(500,{error:'Ошибка сервера. Данные не изменены.'});else res.end();}

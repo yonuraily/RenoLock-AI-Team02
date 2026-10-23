@@ -1,6 +1,29 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.0 · MVP · 17 October 2026
+Version 1.1 · MVP · 17 October 2026
+
+## Version 1.1 Marketplace Extension
+
+The platform now supports finding a contractor before a project exists. Existing budget and estimate rules remain in force. Contractor profiles expose a provider type (team or specialist), city, specialty, supported repair classes, indicative KZT/m² rate, supported area range, years of experience, portfolio and reviews. Indicative prices represent the named specialty and must not imply equal scope across professions. Seeded profiles and reviews are labelled synthetic.
+
+| ID | Added requirement | Validation |
+|---|---|---|
+| FR-19 | Search and filter active profiles by city, provider type, specialty, repair class, maximum indicative rate and area; sort by experience/rate/rating | Domain filter test |
+| FR-20 | Contractor edits only own public profile and adds portfolio entries with optional limited PNG/JPEG/WebP data | Owner and image validation tests |
+| FR-21 | Client sends a scoped request with address, area, class, description and target budget | Domain request tests |
+| FR-22 | Selected contractor sends a detailed initial estimate and conditions | Role and request tests |
+| FR-23 | Client accepts a quoted request once; atomically create a project with selected contractor and a snapshot of the accepted baseline | Acceptance and duplicate tests |
+| FR-24 | Requests, proposals and their history remain private to the two participants | Isolation tests |
+| FR-25 | Client marks a joint project completed only after all additional estimates reach a terminal state, then may submit one rating/review | Completion and review tests |
+| FR-26 | Existing SQLite and browser data receive an idempotent extension without resetting original projects/budgets | Migration test |
+
+Request state: requested → quoted → accepted; requested/quoted → declined. Each mutation requires the current revision. Accepted/declined are terminal. Accepting the initial proposal creates the baseline; later changes require the existing estimate approval workflow. Marketplace is discovery and agreement recording, not a payment or legally binding signature service.
+
+Reviews have a score from 1 to 5 and nonempty text. Synthetic example reviews are distinguishable from reviews tied to a completed project. This is application verification of project membership/completion, not external identity, certification or quality verification. A client completion marker is not evidence of independent inspection. Portfolio files are stored inline in MVP state; there is no photo moderation service.
+
+New logical entities: ProviderProfile belongs to Contractor; PortfolioEntry belongs to ProviderProfile; ServiceRequest links Client and Contractor and may create one Project; Review links a completed Project, Client and ProviderProfile. Public catalog/review data is separate from private request/project payloads.
+
+Validation for this update: 26 domain tests pass, plus JavaScript syntax checks. HTTP/browser validation could not be repeated because local network connections are blocked in the execution environment. Source publication is contingent on access to the Sites Git endpoint. The new offline HTML is a single-browser sandbox with the same stated limitations as hosted static mode.
 
 ## 1. Introduction
 

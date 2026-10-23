@@ -1,0 +1,15 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=path.dirname(fileURLToPath(import.meta.url));
+const read=name=>readFileSync(path.join(root,'dist',name),'utf8');
+const js=s=>JSON.stringify(s).replaceAll('<','\\u003c');
+const bootstrap=`const blob=s=>URL.createObjectURL(new Blob([s],{type:'text/javascript'}));
+const market=blob(${js(read('market.js'))});
+const core=blob(${js(read('core.js'))}.replaceAll("'./market.js'",JSON.stringify(market)));
+const ui=blob(${js(read('market-ui.js'))}.replaceAll("'./market.js'",JSON.stringify(market)));
+const app=blob(${js(read('app.js'))}.replaceAll("'./core.js'",JSON.stringify(core)).replaceAll("'./market-ui.js'",JSON.stringify(ui)));
+import(app).catch(e=>{document.querySelector('#app').textContent='Не удалось открыть демо: '+e.message;});`;
+const output=path.resolve(root,'..','RenoLock-demo.html');
+writeFileSync(output,`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RenoLock — поиск исполнителей и бюджет</title><style>${read('style.css')}\n${read('market.css')}</style></head><body><div id="app"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="modal"></dialog><script type="module">${bootstrap}</script></body></html>`);
+console.log('Offline demonstration created');
