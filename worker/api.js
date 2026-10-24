@@ -5,9 +5,10 @@ export async function handleAPI(request,env){
  const send=(code,data)=>Response.json(data,{status:code,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
  if(path==='/api/health')return send(200,{ok:true,mode:'server',cloud:true,identity:'chatgpt',storage:'D1',ai:'rules'});
  if(!['GET','POST'].includes(request.method))return send(405,{error:'Метод не поддерживается'});
- if(request.method==='POST'&&(request.headers.get('origin')!==url.origin||!request.headers.get('content-type')?.startsWith('application/json')))return send(403,{error:'Недопустимый источник запроса'});
+ if(request.method==='POST'&&!path.startsWith('/api/files')&&(request.headers.get('origin')!==url.origin||!request.headers.get('content-type')?.startsWith('application/json')))return send(403,{error:'Недопустимый источник запроса'});
  const identity=request.headers.get('oai-authenticated-user-id'),email=request.headers.get('oai-authenticated-user-email');
  if(!identity||!email)return send(401,{error:'Войдите через ChatGPT'});
+ if(path.startsWith('/api/files'))return handleFiles(request,env,identity);
  if(path==='/api/identity')return send(200,{email});
  if(!env.DB)return send(503,{error:'Облачная база временно недоступна'});
  let data={};if(request.method==='POST'){const body=await request.text();if(body.length>250000)return send(413,{error:'Запрос слишком большой'});try{data=JSON.parse(body);}catch{return send(400,{error:'Некорректный JSON'});}}

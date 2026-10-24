@@ -1,6 +1,19 @@
 import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
+Фото и файлы|Фото және файлдар|Photos and files
+До 3 файлов, до 5 МБ каждый. JPG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV.|3 файлға дейін, әрқайсысы 5 МБ дейін. JPG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV.|Up to 3 files, 5 MB each. JPG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV.
+Не более 3 разных вложений|3 түрлі тіркемеден артық емес|No more than 3 different attachments
+Файл должен быть от 1 байта до 5 МБ|Файл көлемі 1 байттан 5 МБ дейін болуы тиіс|File size must be between 1 byte and 5 MB
+Добавьте сообщение или вложение|Хабарлама немесе тіркеме қосыңыз|Add a message or attachment
+Загрузка файла|Файл жүктелуде|Uploading file
+Вложение недоступно|Тіркеме қолжетімсіз|Attachment unavailable
+Файл не найден|Файл табылмады|File not found
+Не удалось загрузить файл|Файлды жүктеу мүмкін болмады|Could not upload file
+Некорректное имя файла|Файл атауы дұрыс емес|Invalid filename
+Содержимое не соответствует типу файла|Мазмұны файл түріне сәйкес емес|Content does not match the file type
+Разрешены JPG, PNG, WebP, PDF, DOCX, XLSX, TXT и CSV|JPG, PNG, WebP, PDF, DOCX, XLSX, TXT және CSV рұқсат етіледі|Allowed: JPG, PNG, WebP, PDF, DOCX, XLSX, TXT and CSV
+Недостаточно места в деморежиме. Попробуйте файл меньшего размера.|Демо режимінде орын жеткіліксіз. Кішірек файлды қолданып көріңіз.|Not enough demo storage. Try a smaller file.
 Чат проекта|Жоба чаты|Project chat
 Обсуждение ремонта|Жөндеуді талқылау|Renovation discussion
 Переписка проекта|Жоба хат алмасуы|Project conversation

@@ -1,3 +1,4 @@
+import {validateFile} from './attachments.js';
 import {createLifecycleUI} from './lifecycle-ui.js';
 import {loadLocalAI,prepareLocalAI} from './local-ai.js';
 import {createStaffUI} from './staff-ui.js';
@@ -167,14 +168,20 @@ document.addEventListener('submit',async event=>{
  }
  }catch(e){if(error)error.textContent=e.message;else toast(e.message,true);}finally{busy=false;if(btn.isConnected)btn.disabled=false;}
 });
-const life=createLifecycleUI({state:()=>state,esc,date,heading,empty,openModal,action,refresh,render,go,toast,closeModal:()=>modal.close()});
+
+async function uploadChatFile(file,projectId){
+ if(serverMode){const res=await fetch('/api/files?projectId='+encodeURIComponent(projectId)+'&name='+encodeURIComponent(file.name),{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/octet-stream'},body:file});const json=await res.json();if(!res.ok)throw Error(json.error||'Не удалось загрузить файл');return json.file;}
+ const bytes=new Uint8Array(await file.arrayBuffer()),info=validateFile(file.name,bytes);const demoData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('Не удалось прочитать файл'));reader.readAsDataURL(file);});const copy=structuredClone(local);copy.files??=[];const item={id:crypto.randomUUID(),projectId,ownerId:state.user.id,...info,demoData};copy.files.push(item);try{localStorage.setItem('renolock-demo-v1',JSON.stringify(copy));}catch{throw Error('Недостаточно места в деморежиме. Попробуйте файл меньшего размера.');}local=copy;return item;
+}
+
+const life=createLifecycleUI({uploadFile:uploadChatFile,state:()=>state,esc,date,heading,empty,openModal,action,refresh,render,go,toast,closeModal:()=>modal.close()});
 const staffUI=createStaffUI({lifecyclePanel:life.panel,executionPanel:(e,r)=>executionPanel(e,r)+life.panel('estimate',e,true),state:()=>state,esc,icon,money,total,budget,heading,empty,openModal,toast,action,refresh,render,go,date,badge,linesTable,logList,closeModal:()=>modal.close()});
 const marketplace=createMarketplace({state:()=>state,serverMode:()=>serverMode,simulate:id=>{if(serverMode)throw Error("Недоступно на сервере");state=view(local,local.users.find(u=>u.id===id));sessionStorage.setItem("renolock-demo-user",id);go("requests");},esc,icon,money,total,heading,empty,openModal,toast,action,refresh,render,go,closeModal:()=>modal.close(),addBaseline,readBaseline,linesTable});
 async function init(){if(location.protocol==='https:')cloudUnavailable=true;try{const res=await fetch('/api/health');const data=await res.json();serverMode=data.mode==='server';cloudMode=!!data.cloud;cloudUnavailable=false;if(cloudMode){try{cloudIdentity=await api('identity');}catch{}} }catch{serverMode=false;}
  if(cloudUnavailable){auth();return;}if(serverMode){try{await refresh();}catch{} if(isStaff(state?.user||{}))route={page:'staff-home'};render();}else{local=loadLocal();const id=sessionStorage.getItem('renolock-demo-user');if(id&&local.users.some(u=>u.id===id))state=view(local,local.users.find(u=>u.id===id));if(isStaff(state?.user||{}))route={page:'staff-home'};render();}}
 function protectLifecycle(t,add){add(t.schedule?.pending,['reason','actor']);for(const h of t.schedule?.history||[])add(h,['reason','decisionReason','actor']);add(t.acceptance,['report','reason','actor']);for(const h of t.acceptanceHistory||[])add(h,['report','reason','actor']);}
 initI18n({protectedTexts:()=>{
- const result=new Set();if(!state)return result;for(const m of state.messages||[]){result.add(m.text);result.add(m.sender);}for(const n of state.notifications||[]){result.add(n.context);result.add(n.actor);}
+ const result=new Set();if(!state)return result;for(const f of state.files||[])result.add(f.name);for(const m of state.messages||[]){result.add(m.text);result.add(m.sender);}for(const n of state.notifications||[]){result.add(n.context);result.add(n.actor);}
  const add=(record,keys)=>{for(const key of keys)if(typeof record?.[key]==='string')result.add(record[key].trim());};
  add(state.user,['name','email']);
  for(const p of state.projects||[]){add(p,['name','address','clientEmail']);protectLifecycle(p,add);for(const l of p.baseline)add(l,['name']);}
@@ -190,6 +197,7 @@ init();
 
 
 
-let checkingNotifications=false;setInterval(async()=>{if(checkingNotifications||!state||!serverMode||document.hidden)return;checkingNotifications=true;try{const fresh=await api('state');if(state?.user.id===fresh.user.id){const messagesChanged=JSON.stringify(state.messages)!==JSON.stringify(fresh.messages||[]);state.messages=fresh.messages||[];if(messagesChanged)life.syncChat();const changed=JSON.stringify(state.notifications)!==JSON.stringify(fresh.notifications||[]);state.notifications=fresh.notifications||[];const badge=document.querySelector('#notification-count');if(badge)badge.textContent=state.notifications.filter(n=>!n.readAt).length;if(changed&&route.page==='notifications'&&!modal.open)render();}}catch{}finally{checkingNotifications=false;}},20000);
+let checkingNotifications=false;setInterval(async()=>{if(checkingNotifications||!state||!serverMode||document.hidden)return;checkingNotifications=true;try{const fresh=await api('state');if(state?.user.id===fresh.user.id){const messagesChanged=JSON.stringify(state.messages)!==JSON.stringify(fresh.messages||[]);const filesChanged=JSON.stringify(state.files)!==JSON.stringify(fresh.files||[]);state.files=fresh.files||[];state.messages=fresh.messages||[];if(messagesChanged||filesChanged)life.syncChat();const changed=JSON.stringify(state.notifications)!==JSON.stringify(fresh.notifications||[]);state.notifications=fresh.notifications||[];const badge=document.querySelector('#notification-count');if(badge)badge.textContent=state.notifications.filter(n=>!n.readAt).length;if(changed&&route.page==='notifications'&&!modal.open)render();}}catch{}finally{checkingNotifications=false;}},20000);
+
 
 

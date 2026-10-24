@@ -1,6 +1,16 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.7 · MVP · 24 October 2026
+Version 1.8 · MVP · 24 October 2026
+
+## Current release 1.8 — private chat attachments
+
+FR-45: Each chat message may reference 0–3 unique uploaded attachment IDs, with up to 5 MiB per file. Supported extensions: JPG/JPEG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV. Upload validates name, size and basic magic bytes; SVG/HTML/executable formats are excluded. A message may contain attachments without text. Sender may attach only own uploads belonging to the same project. Retry identity includes attachment IDs.
+
+FR-46: Cloud binaries use a private Sites R2 binding BUCKET; D1 state stores metadata and message associations. Private GET checks a registered, unblocked client/contractor who belongs to the project and either owns the pending upload or can read a message referencing it. Staff and unrelated users receive no attachment metadata or binary access. No public bucket URL is exposed. Documents are downloads; supported raster images have inline previews. Responses are private/no-store, nosniff and sandboxed. Completed projects allow historical reads, not new uploads.
+
+FR-47: The local SQLite server provides equivalent protected endpoints and hashed storage paths under data/uploads. The browser demo uses localStorage, without cross-device guarantees. UI retains selected upload IDs for send retries, polls new file metadata with messages, and preserves draft text. New attachment messages trigger existing private chat notifications. Uploaded binaries are removed if their metadata CAS write fails; orphan recovery after process crashes is not guaranteed. Pending-upload cap: 30 per user. No antivirus scanner, scheduled retention cleanup or full Office package validation is implemented.
+
+Validation: 62 tests and browser confirmation of upload, message attachment and image preview. Existing messages, project budgets, schedule/acceptance decisions and file membership rules are preserved. Earlier statements that attachments are unavailable are superseded by this release.
 
 ## Current release 1.7 — private project messaging
 

@@ -1,7 +1,8 @@
 import http from 'node:http';
+import {handleFiles} from './worker/files.js';
 import {DatabaseSync} from 'node:sqlite';
 import {scryptSync,randomBytes,timingSafeEqual,createHash} from 'node:crypto';
-import {readFileSync,mkdirSync} from 'node:fs';
+import {readFileSync,mkdirSync,writeFileSync,existsSync,unlinkSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {seed,view,mutate,uid,ensurePlatform} from './dist/core.js';
@@ -10,12 +11,15 @@ const folder=process.env.RENOLOCK_DATA||path.join(root,'data');mkdirSync(folder,
 const db=new DatabaseSync(path.join(folder,'renolock.sqlite'));
 db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY CHECK(id=1),json TEXT NOT NULL); CREATE TABLE IF NOT EXISTS credentials (email TEXT PRIMARY KEY,hash TEXT NOT NULL,salt TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY,user_id TEXT NOT NULL,expires INTEGER NOT NULL)');
 const load=()=>JSON.parse(db.prepare('SELECT json FROM state WHERE id=1').get().json);
-const save=s=>db.prepare('INSERT OR REPLACE INTO state VALUES(1,?)').run(JSON.stringify(s));
+if(!db.prepare('PRAGMA table_info(state)').all().some(c=>c.name==='version'))db.exec('ALTER TABLE state ADD COLUMN version INTEGER NOT NULL DEFAULT 0');
+const save=s=>db.prepare('INSERT INTO state (id,json,version) VALUES(1,?,0) ON CONFLICT(id) DO UPDATE SET json=excluded.json,version=state.version+1').run(JSON.stringify(s));
 const hash=(password,salt)=>scryptSync(password,salt,64).toString('hex');
 if(!db.prepare('SELECT id FROM state').get()){
  const s=seed();save(s);for(const u of s.users){const salt=randomBytes(16).toString('hex');db.prepare('INSERT INTO credentials VALUES(?,?,?)').run(u.email,hash('RenoDemo2026!',salt),salt);}
 }
 const digest=s=>createHash('sha256').update(s).digest('hex');
+const uploads=path.join(folder,'uploads');mkdirSync(uploads,{recursive:true});
+const fileEnv={DB:{prepare(sql){const q=db.prepare(sql.replaceAll('renolock_state','state'));let args=[];const statement={bind(...a){args=a;return statement;},async first(){return q.get(...args);},async run(){return {meta:{changes:Number(q.run(...args).changes)}};}};return statement;}},BUCKET:{async put(key,bytes){writeFileSync(path.join(uploads,digest(key)),bytes);},async get(key){const file=path.join(uploads,digest(key));return existsSync(file)?{body:readFileSync(file)}:null;},async delete(key){const file=path.join(uploads,digest(key));if(existsSync(file))unlinkSync(file);}}};
 // Idempotent schema extension preserves existing projects and approvals.
 {const s=load();ensurePlatform(s);save(s);for(const u of s.users.filter(u=>u.id.endsWith('-demo'))){if(!db.prepare('SELECT email FROM credentials WHERE email=?').get(u.email)){const salt=randomBytes(16).toString('hex');db.prepare('INSERT INTO credentials VALUES(?,?,?)').run(u.email,hash('RenoDemo2026!',salt),salt);}}}
 const port=Number(process.env.PORT||4173),host=process.env.HOST||'127.0.0.1';
@@ -27,6 +31,12 @@ const server=http.createServer(async(req,res)=>{
  try{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname.startsWith('/api/')){
+  if(url.pathname.startsWith('/api/files')){
+   const token=(req.headers.cookie||'').match(/(?:^|; )renolock=([^;]+)/)?.[1],session=token?db.prepare('SELECT * FROM sessions WHERE token=? AND expires>?').get(digest(token),Date.now()):null;
+   if(!session)return send(401,{error:'Войдите в аккаунт'});
+   let bytes=Buffer.alloc(0);if(req.method==='POST'){const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>5*1024*1024)return send(413,{error:'Файл должен быть от 1 байта до 5 МБ'});chunks.push(chunk);}bytes=Buffer.concat(chunks);}
+   const request=new Request('http://'+req.headers.host+req.url,{method:req.method,headers:req.headers,...(req.method==='POST'?{body:bytes}: {})});const response=await handleFiles(request,fileEnv,session.user_id);res.writeHead(response.status,Object.fromEntries(response.headers));return res.end(Buffer.from(await response.arrayBuffer()));
+  }
   if(!['GET','POST'].includes(req.method))return send(405,{error:'Метод не поддерживается'});
   if(req.method==='POST'){
    if(req.headers.origin&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return send(403,{error:'Недопустимый источник запроса'});
@@ -64,10 +74,11 @@ const server=http.createServer(async(req,res)=>{
   return send(404,{error:'Не найдено'});
  }
  if(req.method!=='GET'&&req.method!=='HEAD')return send(405,{error:'Метод не поддерживается'});
- const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/local-ai.js':'local-ai.js','/lifecycle.js':'lifecycle.js','/lifecycle-ui.js':'lifecycle-ui.js','/core.js':'core.js','/market.js':'market.js','/market-ui.js':'market-ui.js','/style.css':'style.css','/market.css':'market.css','/i18n.js':'i18n.js','/translations.js':'translations.js','/staff.js':'staff.js','/staff-ui.js':'staff-ui.js','/staff-translations.js':'staff-translations.js'};
+ const files={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/local-ai.js':'local-ai.js','/attachments.js':'attachments.js','/lifecycle.js':'lifecycle.js','/lifecycle-ui.js':'lifecycle-ui.js','/core.js':'core.js','/market.js':'market.js','/market-ui.js':'market-ui.js','/style.css':'style.css','/market.css':'market.css','/i18n.js':'i18n.js','/translations.js':'translations.js','/staff.js':'staff.js','/staff-ui.js':'staff-ui.js','/staff-translations.js':'staff-translations.js'};
  if(!files[url.pathname])return send(404,{error:'Не найдено'});
  const file=files[url.pathname],ext=path.extname(file);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css'})[ext]+'; charset=utf-8','Cache-Control':'no-cache','Content-Security-Policy':"default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://esm.run https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://esm.run https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co https://raw.githubusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"});res.end(req.method==='HEAD'?'':readFileSync(path.join(root,'dist',file)));
  }catch(e){console.error(e.message);if(!res.headersSent)send(500,{error:'Ошибка сервера. Данные не изменены.'});else res.end();}
 });
 server.listen(port,host,()=>console.log(`RenoLock AI: http://${host}:${server.address().port}\nOffline pricing mode · SQLite storage`));
 process.on('SIGTERM',()=>server.close(()=>{db.close();process.exit();}));
+
