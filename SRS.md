@@ -1,6 +1,10 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.8 · MVP · 24 October 2026
+Version 1.9 · MVP · 24 October 2026
+
+## Current release 1.9 — portfolio photography
+
+FR-48: Synthetic sample profiles may render locally bundled licensed interior photos in existing sample portfolio placeholders and catalog covers. Photos have a persistent demo label, attribution and source link. Clicking opens a larger view. Only known sample profiles with demo=true and unchanged sample placeholder descriptions receive these presentation defaults. Actual uploaded images take priority; real profiles and user-added placeholder works are not populated with stock photos. No database mutation or historical-work claim is implied. Photo credits and license are recorded in PHOTO-CREDITS.md. RU/KK/EN labels are provided. Browser checks verified catalog covers, profile portfolio and modal preview.
 
 ## Current release 1.8 — private chat attachments
 

@@ -1,6 +1,11 @@
 import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
+Демо-фото · пример интерьера|Демо фото · интерьер үлгісі|Demo photo · interior example
+Открыть фото|Фотоны ашу|View photo
+Фото:|Фото:|Photo:
+Демонстрационный профиль. Фото интерьеров — примеры оформления, а не подтверждённые работы этой компании. Исходные отзывы — тестовые.|Демонстрациялық профиль. Интерьер фотолары — безендіру үлгілері, осы компанияның расталған жұмыстары емес. Бастапқы пікірлер — тестілік.|Demo profile. Interior photos are layout examples, not verified work by this company. Initial reviews are test examples.
+Демо-фото · пример интерьера. Не подтверждённая работа компании.|Демо фото · интерьер үлгісі. Компанияның расталған жұмысы емес.|Demo photo · interior example. Not verified company work.
 Фото и файлы|Фото және файлдар|Photos and files
 До 3 файлов, до 5 МБ каждый. JPG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV.|3 файлға дейін, әрқайсысы 5 МБ дейін. JPG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV.|Up to 3 files, 5 MB each. JPG, PNG, WebP, PDF, DOCX, XLSX, TXT, CSV.
 Не более 3 разных вложений|3 түрлі тіркемеден артық емес|No more than 3 different attachments
