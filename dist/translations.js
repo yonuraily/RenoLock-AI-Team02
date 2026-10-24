@@ -1,6 +1,77 @@
 import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
+Уведомления|Хабарламалар|Notifications
+Прочитать все|Барлығын оқу|Mark all read
+Новое|Жаңа|New
+Прочитано|Оқылды|Read
+Открыть событие|Оқиғаны ашу|Open event
+Уведомлений пока нет.|Әзірге хабарламалар жоқ.|No notifications yet.
+События ваших заявок, проектов, сроков и приёмки.|Өтінімдер, жобалар, мерзімдер және қабылдау оқиғалары.|Updates on requests, projects, dates and acceptance.
+Уведомления внутри платформы. При открытом кабинете проверяем новые события каждые 20 секунд. Email и push не подключены.|Хабарламалар платформа ішінде. Кабинет ашық кезде жаңа оқиғалар әр 20 секунд сайын тексеріледі. Email және push қосылмаған.|In-app notifications. New events are checked every 20 seconds while your workspace is open. Email and push are not connected.
+Основные работы: сроки и приёмка|Негізгі жұмыстар: мерзімдер және қабылдау|Main works: dates and acceptance
+Сроки и приёмка допработ|Қосымша жұмыстардың мерзімі және қабылдауы|Additional work dates and acceptance
+Согласованные сроки|Келісілген мерзімдер|Agreed dates
+Сроки ещё не согласованы|Мерзімдер әлі келісілмеген|Dates not agreed yet
+Просрочка по согласованному сроку:|Келісілген мерзімнен кешігу:|Overdue against agreed date:
+Календарные дни · время Казахстана (UTC+5)|Күнтізбелік күндер · Қазақстан уақыты (UTC+5)|Calendar days · Kazakhstan time (UTC+5)
+Предложены новые даты|Жаңа күндер ұсынылды|New dates proposed
+Текущие сроки действуют до решения заказчика.|Тапсырыс беруші шешіміне дейін бұрынғы мерзімдер күшінде.|Current dates remain effective until the client decides.
+Согласовать даты|Күндерді келісу|Approve dates
+Отклонить даты|Күндерді қабылдамау|Reject dates
+Предложить перенос|Мерзімді ауыстыруды ұсыну|Propose date change
+Предложить сроки|Мерзімдерді ұсыну|Propose dates
+История сроков|Мерзімдер тарихы|Date history
+Приёмка заказчиком|Тапсырыс берушінің қабылдауы|Client acceptance
+Ход основных работ:|Негізгі жұмыстардың барысы:|Main work progress:
+Начать / продолжить работы|Жұмысты бастау / жалғастыру|Start / resume work
+Работы ещё не сданы на приёмку.|Жұмыстар әлі қабылдауға тапсырылмаған.|Work has not been submitted for acceptance.
+Сдать работы на приёмку|Жұмысты қабылдауға тапсыру|Submit work for acceptance
+Сдать повторно после исправлений|Түзетуден кейін қайта тапсыру|Resubmit after corrections
+Принять работы|Жұмыстарды қабылдау|Accept work
+Запросить исправления|Түзетулерді сұрау|Request corrections
+Замечания заказчика:|Тапсырыс берушінің ескертулері:|Client remarks:
+История приёмки|Қабылдау тарихы|Acceptance history
+Ожидает приёмки|Қабылдауды күтуде|Awaiting acceptance
+Нужны исправления|Түзетулер қажет|Corrections required
+Принято заказчиком|Тапсырыс беруші қабылдады|Accepted by client
+Приёмка фиксирует решение заказчика о результате работ. Она не подтверждает оплату и не меняет бюджет.|Қабылдау тапсырыс берушінің жұмыс нәтижесі туралы шешімін тіркейді. Ол төлемді растамайды және бюджетті өзгертпейді.|Acceptance records the client's decision on the work result. It does not confirm payment or change the budget.
+Даты вступят в силу только после согласования заказчиком.|Күндер тапсырыс берушімен келісілгеннен кейін ғана күшіне енеді.|Dates take effect only after client approval.
+Начало работ|Жұмыстың басталуы|Work start
+Окончание работ|Жұмыстың аяқталуы|Work end
+Обоснование сроков / переноса|Мерзімдер / ауыстыру себебі|Reason for dates / change
+Причина отклонения|Қабылдамау себебі|Rejection reason
+Эти даты станут согласованными сроками работ.|Бұл күндер келісілген жұмыс мерзімдері болады.|These dates will become the agreed work schedule.
+Отчёт о выполнении|Орындалу есебі|Completion report
+Что нужно исправить?|Нені түзету керек?|What needs correcting?
+Подтвердить|Растау|Confirm
+Подтвердите, что вы проверили результат этих работ и принимаете его. Это не подтверждение оплаты.|Жұмыс нәтижесін тексергеніңізді және қабылдағаныңызды растаңыз. Бұл төлем растамасы емес.|Confirm that you checked and accept this work result. This does not confirm payment.
+Решение сохранено. Участники получат уведомление.|Шешім сақталды. Қатысушылар хабарлама алады.|Decision saved. Participants will receive an in-app notification.
+Сначала примите основные работы проекта|Алдымен жобаның негізгі жұмыстарын қабылдаңыз|Accept the main project work first
+Сначала примите все согласованные дополнительные работы|Алдымен барлық келісілген қосымша жұмыстарды қабылдаңыз|Accept all approved additional work first
+Сначала согласуйте сроки работ|Алдымен жұмыс мерзімдерін келісіңіз|Agree work dates first
+Сначала завершите согласование переноса сроков|Алдымен мерзім ауыстыруын келісуді аяқтаңыз|Resolve the pending date change first
+Сроки уже изменены. Обновите данные.|Мерзімдер өзгертілген. Деректерді жаңартыңыз.|Dates have changed. Refresh the data.
+Запрос приёмки уже изменён|Қабылдау сұрауы өзгертілген|The acceptance request has changed
+Сроки предложены|Мерзімдер ұсынылды|Dates proposed
+Сроки согласованы|Мерзімдер келісілді|Dates approved
+Сроки отклонены|Мерзімдер қабылданбады|Dates rejected
+Новые сроки на согласование|Келісуге жаңа мерзімдер|New dates for approval
+Работы сданы на приёмку|Жұмыстар қабылдауға тапсырылды|Work submitted for acceptance
+Работы готовы к приёмке|Жұмыстар қабылдауға дайын|Work ready for acceptance
+Работы приняты|Жұмыстар қабылданды|Work accepted
+Нужны исправления работ|Жұмыстарды түзету қажет|Work corrections requested
+Новая заявка на ремонт|Жөндеуге жаңа өтінім|New renovation request
+Получено предложение|Ұсыныс алынды|Proposal received
+Предложение принято: проект создан|Ұсыныс қабылданды: жоба құрылды|Proposal accepted: project created
+Заявка отклонена|Өтінім қабылданбады|Request declined
+Вы добавлены в проект|Сіз жобаға қосылдыңыз|You were added to a project
+Заказчик завершил проект|Тапсырыс беруші жобаны аяқтады|Client closed the project
+Новая смета на согласование|Келісуге жаңа смета|New estimate for approval
+Смета согласована|Смета келісілді|Estimate approved
+Запрошены изменения сметы|Сметаға өзгерістер сұралды|Estimate changes requested
+Обновлён ход работ|Жұмыс барысы жаңартылды|Work progress updated
+Обновлён ход основных работ|Негізгі жұмыстар барысы жаңартылды|Main work progress updated
 Выполнение согласованных работ|Келісілген жұмыстардың орындалуы|Approved work progress
 Не начато|Басталмаған|Not started
 В работе|Орындалуда|In progress

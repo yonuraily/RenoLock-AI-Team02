@@ -1,6 +1,7 @@
+import {ensureLifecycle,lifecycleView,lifecycleMutate,notifyMutation,canClose} from './lifecycle.js';
 import {ensureMarketplace,marketplaceView,marketMutate} from './market.js';
 import {ensureStaff,staffView,staffMutate,isStaff} from './staff.js';
-export function ensurePlatform(s){ensureMarketplace(s);ensureStaff(s);return s;}
+export function ensurePlatform(s){ensureMarketplace(s);ensureStaff(s);ensureLifecycle(s);return s;}
 export {ensureMarketplace};
 export const uid = () => globalThis.crypto.randomUUID();
 export const now = () => new Date().toISOString();
@@ -48,7 +49,7 @@ export function seed(){
  const logs=[{id:uid(),projectId:'nova',estimateId:'estimate-012',actor:contractor.name,action:'pending',comment:'На проверку заказчику',revision:1,amount:58000,snapshot:structuredClone(estimates[0].lines),at:now()},{id:uid(),projectId:'nova',estimateId:'estimate-011',actor:client.name,action:'approved',comment:'Согласовано расположение розеток',revision:1,amount:21000,snapshot:structuredClone(estimates[1].lines),at:now()}];
  return {users:[contractor,client],projects,prices,estimates,logs};
 }
-export function view(state,user){
+function viewCore(state,user){
  ensurePlatform(state);user=state.users.find(x=>x.id===user.id)||user;assert(!user.blocked,'Аккаунт заблокирован');
  if(isStaff(user))return staffView(state,user);
  const projects=state.projects.filter(p=>p.contractorId===user.id||p.clientId===user.id),ids=new Set(projects.map(p=>p.id));
@@ -56,7 +57,7 @@ export function view(state,user){
  const estimateIds=new Set(estimates.map(e=>e.id));
  return {...marketplaceView(state,user),user,projects,estimates,contractorFinance:user.role==='contractor'?(state.contractorFinance||[]).filter(f=>projects.some(p=>p.id===f.projectId&&p.contractorId===user.id)):[],prices:user.role==='contractor'?state.prices.filter(p=>p.ownerId===user.id):[],logs:state.logs.filter(l=>ids.has(l.projectId)&&(user.role==='contractor'||estimateIds.has(l.estimateId)||!l.estimateId)),people:state.users.filter(u=>projects.some(p=>[p.contractorId,p.clientId].includes(u.id))).map(({id,name,role})=>({id,name,role}))};
 }
-export function mutate(state,user,action,data){
+function mutateCore(state,user,action,data){
  ensurePlatform(state);user=state.users.find(x=>x.id===user.id);assert(user&&!user.blocked,'Аккаунт недоступен');
  if(action.startsWith('admin.')||action.startsWith('manager.'))return staffMutate(state,user,action,data);
  assert(!isStaff(user),'Сотрудник не может изменять сметы и принимать решения за заказчика');
@@ -109,4 +110,12 @@ export function mutate(state,user,action,data){
   assert(e.lines.length>0,'Пустую смету нельзя отправить');e.status=data.status;e.revision++;e.updatedAt=now();audit(p,e,data.status,comment);return e;
  }
  throw Error('Неизвестное действие');
+}
+export function view(state,user){const payload=viewCore(state,user);return lifecycleView(state,payload.user,payload);}
+export function mutate(state,user,action,data){
+ ensurePlatform(state);const actor=state.users.find(u=>u.id===user?.id);assert(actor&&!actor.blocked,'Аккаунт недоступен');
+ if(action==='project.complete'){const p=state.projects.find(p=>p.id===data.id&&p.clientId===actor.id);assert(p,'Проект недоступен');canClose(state,p);}
+ if(action==='estimate.progress'){const e=state.estimates.find(e=>e.id===data.id);assert(!['awaiting','accepted'].includes(e?.acceptance?.status),'Работы переданы на приёмку или приняты');}
+ const result=/^(notification\.|schedule\.|acceptance\.|work\.)/.test(action)?lifecycleMutate(state,actor,action,data):mutateCore(state,actor,action,data);
+ notifyMutation(state,actor,action,data,result);return result;
 }

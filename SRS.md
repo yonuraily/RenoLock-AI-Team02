@@ -1,6 +1,18 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.5 · MVP · 24 October 2026
+Version 1.6 · MVP · 24 October 2026
+
+## Current release 1.6 — scheduling, acceptance and notifications
+
+FR-39: Both baseline project work and each approved additional estimate have a separate schedule with proposed/approved start and end dates. Contractor proposals require a reason and a current schedule version. Dates must be valid YYYY-MM-DD calendar dates with start ≤ end. Only the assigned client decides; rejection requires a reason. A new proposal does not overwrite agreed dates. Proposals and decisions are retained in history. Calendar lateness is calculated against the current agreed end date in Asia/Qyzylorda (UTC+5); accepted work is not shown as currently overdue. There is no scheduled reminder service.
+
+FR-40: Contractor submits baseline or approved extra work with a nonempty completion report, agreed dates and no pending date proposal. Acceptance is versioned: awaiting → accepted or changes; changes requires client remarks and permits contractor correction/resubmission. Only the assigned client decides. Awaiting/accepted work rejects execution updates and new date proposals. Accepted work is immutable through these operations. Financial approval and budget remain unchanged. Project closure requires client acceptance of baseline and every approved extra estimate, plus terminal approval workflows. Done alone never implies acceptance. Previous data is preserved without manufacturing historical client acceptance.
+
+FR-41: Successful marketplace, financial-decision, progress, schedule and acceptance mutations append recipient-specific in-app notifications in the same persisted state transaction. Actor is not self-notified. Project participants and assigned manager receive relevant events; access-revoked records are filtered from view. Notifications support private read/all-read and navigation to project, estimate or requests. Failed/stale mutations produce no event. The open workspace polls every 20 seconds; notification polling does not replace in-progress forms. Email/SMS/push and offline delivery are outside this release.
+
+Validation: 55 automated tests. New acceptance criteria cover calendar validation, authority boundaries, stale decision rejection, retained dates on rejected transfers, corrections and resubmission, no budget change, notification ownership/persistence, and full marketplace-to-review flow. The browser verified contractor proposals, client agreement, unread delivery and client correction requests on the local server.
+
+The following release sections describe historical behavior. Current 1.6 requirements supersede statements that client work acceptance, notifications and agreed dates are future features.
 
 ## Current release 1.5 — supersedes historical deployment/AI descriptions below
 
