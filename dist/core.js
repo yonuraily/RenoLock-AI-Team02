@@ -1,4 +1,6 @@
 import {ensureMarketplace,marketplaceView,marketMutate} from './market.js';
+import {ensureStaff,staffView,staffMutate,isStaff} from './staff.js';
+export function ensurePlatform(s){ensureMarketplace(s);ensureStaff(s);return s;}
 export {ensureMarketplace};
 export const uid = () => globalThis.crypto.randomUUID();
 export const now = () => new Date().toISOString();
@@ -46,14 +48,17 @@ export function seed(){
  return {users:[contractor,client],projects,prices,estimates,logs};
 }
 export function view(state,user){
- ensureMarketplace(state);
+ ensurePlatform(state);user=state.users.find(x=>x.id===user.id)||user;assert(!user.blocked,'Аккаунт заблокирован');
+ if(isStaff(user))return staffView(state,user);
  const projects=state.projects.filter(p=>p.contractorId===user.id||p.clientId===user.id),ids=new Set(projects.map(p=>p.id));
  const estimates=state.estimates.filter(e=>ids.has(e.projectId)&&(user.role==='contractor'||e.status!=='draft'));
  const estimateIds=new Set(estimates.map(e=>e.id));
  return {...marketplaceView(state,user),user,projects,estimates,prices:user.role==='contractor'?state.prices.filter(p=>p.ownerId===user.id):[],logs:state.logs.filter(l=>ids.has(l.projectId)&&(user.role==='contractor'||estimateIds.has(l.estimateId)||!l.estimateId)),people:state.users.filter(u=>projects.some(p=>[p.contractorId,p.clientId].includes(u.id))).map(({id,name,role})=>({id,name,role}))};
 }
 export function mutate(state,user,action,data){
- ensureMarketplace(state);
+ ensurePlatform(state);user=state.users.find(x=>x.id===user.id);assert(user&&!user.blocked,'Аккаунт недоступен');
+ if(action.startsWith('admin.')||action.startsWith('manager.'))return staffMutate(state,user,action,data);
+ assert(!isStaff(user),'Сотрудник не может изменять сметы и принимать решения за заказчика');
  if(/^(profile\.|portfolio\.|request\.|review\.|project\.complete$)/.test(action))return marketMutate(state,user,action,data);
  const contractor=()=>assert(user.role==='contractor','Доступно только подрядчику');
  const project=id=>{const p=state.projects.find(p=>p.id===id);assert(p&&(p.contractorId===user.id||p.clientId===user.id),'Проект недоступен');return p;};

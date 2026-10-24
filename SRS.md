@@ -1,6 +1,22 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.2 · MVP · 23 October 2026
+Version 1.3 · MVP · 24 October 2026
+
+## Version 1.3 Platform Staff
+
+FR-30: Manager and Administrator have dedicated role-based dashboards, demo entry points and RU/KK/EN UI. Public account creation remains limited to Client and Contractor. Real staff privileges are enforced by the server; online sandbox staff entry remains explicitly demonstrative.
+
+FR-31: Administrators assign active managers to projects or remove assignments. A manager only reads assigned projects, submitted/terminal estimates and requests already linked to those projects. A manager cannot access another manager’s projects, contractor draft estimates or the platform account list. Administrators can inspect platform records including drafts for oversight.
+
+FR-32: Staff may manage operational stages, create tasks with a valid due date and change task status, and add internal notes on accessible projects. Staff notes/tasks are not included in the Client/Contractor payload. Stages do not approve a financial estimate, change a baseline or affect budget derivation. Notes and tasks are operational records and do not attest actual payment or inspection.
+
+FR-33: Administrators can block/unblock non-administrator accounts with a reason. Server sessions for the affected account are revoked. Login, reads and writes by blocked users are rejected. A free account without project/request participation or a professional profile may become a Manager or return to Client. Self-administration and administrator-role grants via these mutations are prohibited.
+
+FR-34: Administrators hide/restore profiles and reviews with a reason, preserving original records. Hidden profiles and blocked providers are excluded from discovery and new requests; hidden reviews do not affect displayed ratings. Owner edits cannot undo administrator moderation. Staff audit records actor, time, operation, target, reason, and before/after values. This is application-level audit persistence, not cryptographic tamper protection.
+
+BR-09: Staff must not execute Contractor/Client financial mutations. Only the assigned client can approve additional expenses. The pre-existing approved-budget equation is unchanged. Staff public-registration escalation attempts are rejected.
+
+Validation: 41 tests pass, including HTTP staff authentication, rejection of public Admin signup, session invalidation on blocking/role change, assignment boundaries, moderation visibility, nonpublic notes, and refusal of staff financial decisions. Browser QA confirmed manager stage changes do not alter the displayed budget and appear in the administrator audit.
 
 ## Version 1.2 Language Support
 

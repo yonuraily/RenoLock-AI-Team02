@@ -25,11 +25,11 @@ export function ensureMarketplace(s){
  }
  s.marketVersion=1;return s;
 }
-export function marketplaceView(s,user){ensureMarketplace(s);return {profiles:s.profiles.filter(p=>p.active||p.ownerId===user.id),requests:s.requests.filter(r=>r.clientId===user.id||r.contractorId===user.id),reviews:s.reviews};}
+export function marketplaceView(s,user){ensureMarketplace(s);return {profiles:s.profiles.filter(p=>(p.active&&!p.moderationHidden&&!s.users.find(u=>u.id===p.ownerId)?.blocked)||p.ownerId===user.id),requests:s.requests.filter(r=>r.clientId===user.id||r.contractorId===user.id),reviews:s.reviews.filter(r=>!r.hidden)};}
 export function findProfiles(profiles,reviews,f={}){
- return profiles.filter(p=>p.active&&(!f.q||(p.name+' '+p.specialty+' '+p.bio).toLowerCase().includes(f.q.toLowerCase()))&&(!f.city||p.city===f.city)&&(!f.type||p.type===f.type)&&(!f.specialty||p.specialty===f.specialty)&&(!f.repairClass||p.repairClasses.includes(f.repairClass))&&(!f.maxRate||p.rate<=Number(f.maxRate))&&(!f.area||(Number(f.area)>=p.minArea&&Number(f.area)<=p.maxArea))).sort((a,b)=>f.sort==='price'?a.rate-b.rate:f.sort==='rating'?ratingOf(b,reviews).average-ratingOf(a,reviews).average:b.experience-a.experience);
+ return profiles.filter(p=>p.active&&!p.moderationHidden&&(!f.q||(p.name+' '+p.specialty+' '+p.bio).toLowerCase().includes(f.q.toLowerCase()))&&(!f.city||p.city===f.city)&&(!f.type||p.type===f.type)&&(!f.specialty||p.specialty===f.specialty)&&(!f.repairClass||p.repairClasses.includes(f.repairClass))&&(!f.maxRate||p.rate<=Number(f.maxRate))&&(!f.area||(Number(f.area)>=p.minArea&&Number(f.area)<=p.maxArea))).sort((a,b)=>f.sort==='price'?a.rate-b.rate:f.sort==='rating'?ratingOf(b,reviews).average-ratingOf(a,reviews).average:b.experience-a.experience);
 }
-export function ratingOf(p,reviews){const rows=reviews.filter(r=>r.profileId===p.id);return {count:rows.length,average:rows.length?rows.reduce((s,r)=>s+r.rating,0)/rows.length:0,verified:rows.filter(r=>!r.demo).length};}
+export function ratingOf(p,reviews){const rows=reviews.filter(r=>r.profileId===p.id&&!r.hidden);return {count:rows.length,average:rows.length?rows.reduce((s,r)=>s+r.rating,0)/rows.length:0,verified:rows.filter(r=>!r.demo).length};}
 export function marketMutate(s,user,action,d){ensureMarketplace(s);
  const client=()=>ok(user.role==='client','Доступно только заказчику');const contractor=()=>ok(user.role==='contractor','Доступно только подрядчику');
  if(action==='profile.save'){
@@ -43,7 +43,7 @@ export function marketMutate(s,user,action,d){ensureMarketplace(s);
   const entry={id:id(),title:str(d.title),description:str(d.description,1000),palette:d.palette,image};p.portfolio.push(entry);return entry;
  }
  if(action==='request.create'){
-  client();const p=s.profiles.find(p=>p.id===d.profileId&&p.active);ok(p,'Исполнитель недоступен');const area=num(d.area,1,1e5);ok(area>=p.minArea&&area<=p.maxArea,'Площадь не входит в диапазон исполнителя');ok(p.repairClasses.includes(d.repairClass),'Этот класс ремонта не предлагается');
+  client();const p=s.profiles.find(p=>p.id===d.profileId&&p.active&&!p.moderationHidden&&!s.users.find(u=>u.id===p.ownerId)?.blocked);ok(p,'Исполнитель недоступен');const area=num(d.area,1,1e5);ok(area>=p.minArea&&area<=p.maxArea,'Площадь не входит в диапазон исполнителя');ok(p.repairClasses.includes(d.repairClass),'Этот класс ремонта не предлагается');
   const r={id:id(),profileId:p.id,contractorId:p.ownerId,clientId:user.id,clientName:user.name,clientEmail:user.email,contractorName:p.name,title:str(d.title),address:str(d.address),description:str(d.description,3000),area,repairClass:d.repairClass,targetBudget:num(d.targetBudget,1),status:'requested',revision:1,events:[],createdAt:at(),updatedAt:at()};r.events.push({actor:user.name,status:r.status,at:at(),comment:r.description});s.requests.push(r);return r;
  }
  if(action.startsWith('request.')){

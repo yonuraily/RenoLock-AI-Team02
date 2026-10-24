@@ -1,3 +1,4 @@
+import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
 RenoLock AI — бюджет под контролем|RenoLock AI — бюджет бақылауда|RenoLock AI — budget under control
@@ -512,4 +513,4 @@ PNG, JPEG, WebP до 400 КБ.|PNG, JPEG, WebP, 400 КБ дейін.|PNG, JPEG o
 Язык|Тіл|Language
 Тексты проектов и отзывы сохраняются на языке автора.|Жоба мәтіндері мен пікірлер автор тілінде сақталады.|Project text and reviews remain in the author’s language.
 `;
-export const translations=Object.fromEntries((rows+mainRows).trim().split('\n').filter(Boolean).map(row=>{const [ru,kk,en]=row.split('|');if(!ru||!kk||!en)throw Error('Invalid translation row: '+row);return [ru,{kk,en}];}));
+export const translations={...Object.fromEntries((rows+mainRows).trim().split('\n').filter(Boolean).map(row=>{const [ru,kk,en]=row.split('|');if(!ru||!kk||!en)throw Error('Invalid translation row: '+row);return [ru,{kk,en}];})),...staffTranslations};

@@ -25,6 +25,20 @@ test('HTTP accounts, isolation, full workflow and persistence',async()=>{
   const reg=await request('auth',{method:'POST',as:'new',body:{register:true,name:'Новый клиент',email:'new@example.com',password:'SecurePassword123!',role:'client'}});assert.equal(reg.status,200);assert.equal((await get('new')).data.projects.length,0);
   assert.equal((await call('new','estimate.transition',{id:'estimate-012',revision:2,status:'approved'})).status,400);
   assert.equal((await request('auth',{method:'POST',as:'bad',body:{email:'new@example.com',password:'wrongpassword'}})).status,401);
+  for(const role of ['manager','admin'])assert.equal((await request('auth',{method:'POST',as:role,body:{email:role+'@renolock.demo',password:'RenoDemo2026!'}})).status,200);
+  assert.equal((await get('manager')).data.projects.length,2);assert.equal((await get('admin')).data.accounts.length,10);
+  assert.equal((await request('auth',{method:'POST',as:'attack',body:{register:true,name:'Admin',email:'attack@example.com',password:'SecurePassword123!',role:'admin'}})).status,400);
+  assert.equal((await call('manager','estimate.transition',{id:'estimate-012',revision:2,status:'approved'})).status,400);
+  const newId=reg.data.user.id;
+  assert.equal((await call('admin','admin.user.status',{id:newId,blocked:true,comment:'Test access block'})).status,200);
+  assert.equal((await get('new')).status,401);
+  assert.equal((await request('auth',{method:'POST',as:'new',body:{email:'new@example.com',password:'SecurePassword123!'}})).status,403);
+  assert.equal((await call('admin','admin.user.status',{id:newId,blocked:false,comment:'Access restored'})).status,200);
+  assert.equal((await request('auth',{method:'POST',as:'new',body:{email:'new@example.com',password:'SecurePassword123!'}})).status,200);
+  assert.equal((await call('admin','admin.user.role',{id:newId,role:'manager',comment:'New staff member'})).status,200);
+  assert.equal((await get('new')).status,401);
+  assert.equal((await request('auth',{method:'POST',as:'new',body:{email:'new@example.com',password:'SecurePassword123!'}})).data.user.role,'manager');
+  assert.equal((await get('new')).data.projects.length,0);
   await stop();await start();const persisted=await get('client');assert.equal(persisted.data.estimates.find(e=>e.id==='estimate-012').status,'approved');
   assert.equal((await request('logout',{method:'POST',as:'client',body:{}})).status,200);assert.equal((await get('client')).status,401);
  }finally{if(child?.exitCode===null)await stop();rmSync(data,{recursive:true,force:true});}
