@@ -5,6 +5,7 @@ export {ensureMarketplace};
 export const uid = () => globalThis.crypto.randomUUID();
 export const now = () => new Date().toISOString();
 export const statuses = {draft:'Черновик',pending:'На согласовании',approved:'Согласовано',rejected:'Отклонено',changes:'Нужны изменения'};
+export const executionStatuses={not_started:'Не начато',in_progress:'В работе',delayed:'Задержано',done:'Завершено'};
 export const money = n => new Intl.NumberFormat('ru-KZ',{maximumFractionDigits:2}).format(n)+' ₸';
 export const total = lines => Math.round(lines.reduce((s,l)=>s+Math.round(l.qty*l.price*100),0))/100;
 export function budget(p,estimates){const rows=estimates.filter(e=>e.projectId===p.id);const approved=rows.filter(e=>e.status==='approved').reduce((s,e)=>s+total(e.lines),0);return {initial:total(p.baseline),approved,current:total(p.baseline)+approved,pending:rows.filter(e=>e.status==='pending').reduce((s,e)=>s+total(e.lines),0)};}
@@ -53,7 +54,7 @@ export function view(state,user){
  const projects=state.projects.filter(p=>p.contractorId===user.id||p.clientId===user.id),ids=new Set(projects.map(p=>p.id));
  const estimates=state.estimates.filter(e=>ids.has(e.projectId)&&(user.role==='contractor'||e.status!=='draft'));
  const estimateIds=new Set(estimates.map(e=>e.id));
- return {...marketplaceView(state,user),user,projects,estimates,prices:user.role==='contractor'?state.prices.filter(p=>p.ownerId===user.id):[],logs:state.logs.filter(l=>ids.has(l.projectId)&&(user.role==='contractor'||estimateIds.has(l.estimateId)||!l.estimateId)),people:state.users.filter(u=>projects.some(p=>[p.contractorId,p.clientId].includes(u.id))).map(({id,name,role})=>({id,name,role}))};
+ return {...marketplaceView(state,user),user,projects,estimates,contractorFinance:user.role==='contractor'?(state.contractorFinance||[]).filter(f=>projects.some(p=>p.id===f.projectId&&p.contractorId===user.id)):[],prices:user.role==='contractor'?state.prices.filter(p=>p.ownerId===user.id):[],logs:state.logs.filter(l=>ids.has(l.projectId)&&(user.role==='contractor'||estimateIds.has(l.estimateId)||!l.estimateId)),people:state.users.filter(u=>projects.some(p=>[p.contractorId,p.clientId].includes(u.id))).map(({id,name,role})=>({id,name,role}))};
 }
 export function mutate(state,user,action,data){
  ensurePlatform(state);user=state.users.find(x=>x.id===user.id);assert(user&&!user.blocked,'Аккаунт недоступен');
@@ -62,6 +63,18 @@ export function mutate(state,user,action,data){
  if(/^(profile\.|portfolio\.|request\.|review\.|project\.complete$)/.test(action))return marketMutate(state,user,action,data);
  const contractor=()=>assert(user.role==='contractor','Доступно только подрядчику');
  const project=id=>{const p=state.projects.find(p=>p.id===id);assert(p&&(p.contractorId===user.id||p.clientId===user.id),'Проект недоступен');return p;};
+ if(action==='estimate.progress'){
+  contractor();const e=state.estimates.find(e=>e.id===data.id);assert(e,'Смета недоступна');const p=project(e.projectId);assert(p.contractorId===user.id,'Доступно только подрядчику проекта');assert(e.status==='approved','Выполнение доступно только для согласованной сметы');assert(!p.completedAt,'Проект завершён');
+  assert(Object.hasOwn(executionStatuses,data.status),'Выберите статус выполнения');assert(Number.isInteger(data.expectedVersion)&&data.expectedVersion===(e.executionVersion||0),'Статус уже обновлён. Обновите данные и повторите.');
+  const delayed=data.status==='delayed';assert(!delayed||(Number.isInteger(data.delayDays)&&data.delayDays>=1&&data.delayDays<=3650),'Укажите задержку от 1 до 3650 дней');
+  const reason=delayed?text(data.reason,1000):String(data.reason||'').trim();assert(reason.length<=1000,'Комментарий слишком длинный');
+  const event={status:data.status,delayDays:delayed?data.delayDays:0,reason,actor:user.name,actorId:user.id,at:now()};e.execution=event;e.executionVersion=(e.executionVersion||0)+1;e.executionHistory??=[];e.executionHistory.push({...event,version:e.executionVersion});return {execution:e.execution,executionVersion:e.executionVersion};
+ }
+ if(action==='finance.save'){
+  contractor();const p=project(data.projectId);assert(p.contractorId===user.id,'Финансы доступны только подрядчику проекта');
+  const values={};for(const key of ['plannedCost','actualCost','received']){assert(typeof data[key]==='number'&&Number.isFinite(data[key])&&data[key]>=0&&data[key]<=1e9,'Укажите суммы от 0 до 1 млрд ₸');values[key]=Math.round(data[key]*100)/100;}
+  state.contractorFinance??=[];let f=state.contractorFinance.find(f=>f.projectId===p.id);if(!f){f={projectId:p.id};state.contractorFinance.push(f);}Object.assign(f,values,{updatedAt:now()});return f;
+ }
  const audit=(p,e,action,comment='')=>state.logs.push({id:uid(),projectId:p.id,estimateId:e?.id||null,actor:user.name,action,comment,revision:e?.revision||1,amount:e?total(e.lines):total(p.baseline),snapshot:structuredClone(e?.lines||p.baseline),at:now()});
  const validateLines=lines=>{assert(Array.isArray(lines)&&lines.length>0&&lines.length<=100,'Добавьте от 1 до 100 позиций');return lines.map(l=>{
   const p=state.prices.find(p=>p.id===l.priceId&&p.ownerId===user.id&&p.active);assert(p,'Позиция прайса недоступна');const qty=number(l.qty,1e6),price=number(l.price);const overrideReason=price!==p.price?text(l.overrideReason,500):'';

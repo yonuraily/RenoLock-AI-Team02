@@ -1,6 +1,58 @@
 import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
+Выполнение согласованных работ|Келісілген жұмыстардың орындалуы|Approved work progress
+Не начато|Басталмаған|Not started
+В работе|Орындалуда|In progress
+Задержано|Кешіктірілді|Delayed
+Завершено|Аяқталды|Completed
+Обновить выполнение|Орындалуды жаңарту|Update work progress
+Статус выполнения|Орындалу күйі|Execution status
+Задержка, дней|Кешігу, күн|Delay in days
+Причина / комментарий|Себеп / түсініктеме|Reason / comment
+Причина обязательна при задержке.|Кешігу кезінде себеп міндетті.|A reason is required for a delay.
+История выполнения|Орындалу тарихы|Progress history
+Изменений пока нет.|Әзірге өзгерістер жоқ.|No updates yet.
+Сохранить выполнение|Орындалуды сақтау|Save progress
+Статус выполнения сохранён|Орындалу күйі сақталды|Progress status saved
+Статус сообщает подрядчик. Это не подтверждение приёмки или оплаты. Изменение хода работ не меняет согласованную сумму.|Күйді мердігер хабарлайды. Бұл қабылдау немесе төлем растамасы емес. Орындалуды өзгерту келісілген соманы өзгертпейді.|Status is reported by the contractor. It does not confirm acceptance or payment. Progress updates do not change the approved amount.
+Обязательно только для статуса «Задержано». Это оценка подрядчика, не автоматический расчёт по календарю.|Тек «Кешіктірілді» күйінде міндетті. Бұл мердігердің бағалауы, күнтізбе бойынша автоматты есеп емес.|Required only for Delayed. This is the contractor's estimate, not an automatic calendar calculation.
+Сметы по прайсу · Бесплатный локальный AI доступен на совместимых устройствах.|Прайс бойынша сметалар · Тегін жергілікті AI үйлесімді құрылғыларда қолжетімді.|Price-list estimates · Free local AI on compatible devices.
+Мои финансы проекта|Жобадағы қаржым|My project finances
+Только подрядчику|Тек мердігерге|Contractor only
+Стоимость согласованных работ|Келісілген жұмыстардың құны|Approved work value
+Суммы на согласовании не включены.|Келісуді күтетін сомалар қосылмаған.|Pending amounts are excluded.
+Получено от заказчика|Тапсырыс берушіден алынды|Received from client
+Осталось получить|Алуға қалды|Remaining receivable
+План расходов на весь проект|Жобаның барлық шығындар жоспары|Total planned project costs
+Плановая прибыль|Жоспарлы пайда|Estimated profit
+Плановая маржа|Жоспарлы маржа|Estimated margin
+Фактические расходы|Нақты шығындар|Actual costs
+Остаток денежных средств|Ақша қалдығы|Cash balance
+Обновить мои финансы|Қаржымды жаңарту|Update my finances
+Сохранить мои финансы|Қаржымды сақтау|Save my finances
+Мои финансы сохранены|Қаржылық деректер сақталды|My finances saved
+Укажите план расходов|Шығындар жоспарын енгізіңіз|Enter planned costs
+Не указан|Көрсетілмеген|Not entered
+от стоимости договора|шарт құнынан|of contract value
+Стоимость работ минус план расходов. Не гарантированный заработок; учтите все расходы и налоги.|Жұмыс құны минус жоспарлы шығындар. Бұл кепілді табыс емес; барлық шығындар мен салықтарды ескеріңіз.|Work value minus planned costs. Earnings are not guaranteed; include all costs and taxes.
+Получено минус фактические расходы. Итоги вводятся вручную, подключения к банку нет.|Алынған ақша минус нақты шығындар. Қорытынды қолмен енгізіледі, банкке қосылмаған.|Receipts minus actual costs. Totals are entered manually; no bank connection.
+Фактические расходы превысили план. Обновите прогноз.|Нақты шығындар жоспардан асты. Болжамды жаңартыңыз.|Actual costs exceed the plan. Update your forecast.
+Получено больше стоимости договора. Проверьте аванс и внесённые суммы.|Шарт құнынан артық ақша алынды. Авансты және сомаларды тексеріңіз.|Receipts exceed contract value. Check advances and entered amounts.
+Введите накопленные итоги по проекту. Сохранение заменяет прежние суммы, а не добавляет платёж. Эти данные видны только вам и не меняют бюджет заказчика.|Жобаның жинақталған қорытындысын енгізіңіз. Сақтау бұрынғы сомаларды ауыстырады, төлем қоспайды. Деректер тек сізге көрінеді және тапсырыс беруші бюджетін өзгертпейді.|Enter cumulative project totals. Saving replaces previous amounts; it does not add a payment. Only you can see these figures; the client budget is unchanged.
+Бесплатный локальный AI|Тегін жергілікті AI|Free local AI
+Загрузить бесплатную модель|Тегін модельді жүктеу|Download free model
+Подготовить с AI|AI көмегімен дайындау|Prepare with AI
+Загрузка бесплатной AI-модели|Тегін AI моделін жүктеу|Free AI model download
+Начать загрузку|Жүктеуді бастау|Start download
+Модель загружена|Модель жүктелді|Model loaded
+Модель ещё не загружена. Режим правил доступен без загрузки.|Модель әлі жүктелмеді. Ережелер режимі жүктеусіз қолжетімді.|Model not loaded yet. Rules mode works without a download.
+AI готов. Проверьте результат перед сохранением.|AI дайын. Сақтау алдында нәтижені тексеріңіз.|AI ready. Review the result before saving.
+AI разбирает описание…|AI сипаттаманы талдауда…|AI is analysing the description…
+AI-черновик готов. Обязательно проверьте работы и объёмы.|AI нобайы дайын. Жұмыстар мен көлемдерді тексеріңіз.|AI draft ready. Check all work items and quantities.
+Qwen 0.5B работает на вашем устройстве через WebGPU. Первая загрузка — несколько сотен МБ; нужен совместимый Chrome/Edge и свободная память. Загрузка файлов идёт с CDN и Hugging Face. Текст сметы обрабатывается в браузере.|Qwen 0.5B WebGPU арқылы құрылғыңызда жұмыс істейді. Алғашқы жүктеу бірнеше жүз МБ; үйлесімді Chrome/Edge және бос жад қажет. Файлдар CDN және Hugging Face арқылы жүктеледі. Смета мәтіні браузерде өңделеді.|Qwen 0.5B runs on your device using WebGPU. Initial download is several hundred MB; compatible Chrome/Edge and available memory are required. Files download from CDN and Hugging Face. Estimate text is processed in your browser.
+Модель может ошибаться. Цены берём только из прайса; результат — черновик для проверки.|Модель қателесуі мүмкін. Бағалар тек прайстан алынады; нәтиже тексеруге арналған нобай.|The model can make mistakes. Prices come only from your price list; the result is a draft for review.
+Потребуется несколько сотен МБ трафика и память устройства. Модель загрузится с публичных CDN. Платного API нет.|Бірнеше жүз МБ трафик және құрылғы жады қажет. Модель ашық CDN арқылы жүктеледі. Ақылы API жоқ.|Requires several hundred MB of bandwidth and device memory. Model files download from public CDNs. No paid API.
 Облачная платформа|Бұлттық платформа|Cloud platform
 Ваш ремонт.|Сіздің жөндеуіңіз.|Your renovation.
 Общее пространство.|Ортақ кеңістік.|One shared workspace.

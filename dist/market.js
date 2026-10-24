@@ -61,7 +61,7 @@ export function marketMutate(s,user,action,d){ensureMarketplace(s);
   r.revision++;r.updatedAt=at();r.events.push({actor:user.name,status:r.status,comment:action==='request.quote'?r.quote.comment:d.comment||'Первоначальная смета принята',at:at(),amount:r.quote?.amount});return r;
  }
  if(action==='project.complete'){
-  client();const p=s.projects.find(p=>p.id===d.id&&p.clientId===user.id);ok(p,'Проект недоступен');ok(!p.completedAt,'Проект уже завершён');ok(!s.estimates.some(e=>e.projectId===p.id&&['pending','changes','draft'].includes(e.status)),'Сначала завершите согласование всех дополнительных смет');p.completedAt=at();return p;
+  client();const p=s.projects.find(p=>p.id===d.id&&p.clientId===user.id);ok(p,'Проект недоступен');ok(!p.completedAt,'Проект уже завершён');ok(!s.estimates.some(e=>e.projectId===p.id&&['pending','changes','draft'].includes(e.status)),'Сначала завершите согласование всех дополнительных смет');ok(!s.estimates.some(e=>e.projectId===p.id&&e.status==='approved'&&e.execution?.status!=='done'),'Сначала подрядчик должен завершить согласованные работы');p.completedAt=at();return p;
  }
  if(action==='review.create'){
   client();const p=s.projects.find(p=>p.id===d.projectId&&p.clientId===user.id);ok(p?.completedAt,'Отзыв доступен после завершения совместного проекта');const profile=s.profiles.find(x=>x.ownerId===p.contractorId);ok(profile,'Профиль исполнителя не найден');ok(!s.reviews.some(r=>r.projectId===p.id),'Отзыв на этот проект уже оставлен');num(d.rating,1,5);ok(Number.isInteger(d.rating),'Выберите целую оценку от 1 до 5');const review={id:id(),projectId:p.id,profileId:profile.id,author:user.name,rating:d.rating,text:str(d.text,2000),demo:false,at:at()};s.reviews.push(review);return review;

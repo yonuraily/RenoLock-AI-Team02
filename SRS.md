@@ -1,6 +1,22 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.3 · MVP · 24 October 2026
+Version 1.5 · MVP · 24 October 2026
+
+## Current release 1.5 — supersedes historical deployment/AI descriptions below
+
+The hosted production Site runs a Cloudflare Worker with a provisioned D1 binding. Authentication uses Sites Sign in with ChatGPT, followed by name and Client/Contractor onboarding. The API uses verified dispatch identity, not a submitted email. Browser demo data remains separate. No public privileged account creation is allowed. A real cloud administrator has not yet been provisioned. The local Node/SQLite server remains available separately.
+
+FR-35: Approved estimates have a separate execution status: not_started, in_progress, delayed, done. Only the assigned contractor may update this status, with optimistic execution-version checking. Delayed requires integer delayDays from 1 to 3650 and a nonempty reason. History retains actor, time, reason and prior updates. Delay days are contractor-reported, not automatically calculated from a contractual deadline. Execution never changes financial approval or amount. Clients and assigned staff can read progress. Completed projects reject further progress changes.
+
+FR-36: A client cannot close a project while additional estimates have unresolved approval states or approved work is not marked done. Contractor-reported completion is separate from client project completion; per-work client acceptance/dispute is future scope.
+
+FR-37: Contractor-only project finances store cumulative plannedCost, actualCost and received, each from 0 to 1 billion KZT. Saving replaces totals. Planned profit equals approved contract value minus plannedCost. Cash balance equals received minus actualCost. Receipt progress uses approved contract value and caps the visual bar at 100%, while retaining any overpayment in numeric values. Pending changes are excluded. Client/staff responses and shared reports exclude private finances. No bank connection or transaction ledger is implied.
+
+FR-38: Optional free local generative AI uses WebLLM 0.2.79 and Qwen2.5-0.5B-Instruct-q4f16_1-MLC in a WebGPU-compatible browser after explicit model-download action. It classifies work clauses against active own-catalog IDs; code extracts explicit quantities and assigns catalog prices. Invalid IDs, quantities, units and duplicates are excluded. All results require manual review before saving/sending; model failure does not silently claim successful AI inference. Rules/manual mode remains available. Model download is several hundred MB; device compatibility, output quality and availability are not guaranteed. No paid model API is called.
+
+BR-10: Financial approval, execution and payments are separate concepts. Approved does not mean executed or paid; done does not mean client acceptance. Contractor private figures do not modify the shared budget.
+
+Business analysis, stakeholder needs, requirement traceability and ideal role journeys are provided in `../RenoLock-Business-Analysis.md`. Validation at this release includes 49 automated tests; browser evidence and local-model verification are described in the delivery notes. Historical version descriptions below describe their respective earlier releases.
 
 ## Version 1.3 Platform Staff
 
