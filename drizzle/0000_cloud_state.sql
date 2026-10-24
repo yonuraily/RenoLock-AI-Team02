@@ -1,0 +1,1 @@
+CREATE TABLE renolock_state (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 0);

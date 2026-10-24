@@ -1,6 +1,21 @@
 import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
+Облачная платформа|Бұлттық платформа|Cloud platform
+Ваш ремонт.|Сіздің жөндеуіңіз.|Your renovation.
+Общее пространство.|Ортақ кеңістік.|One shared workspace.
+Вход и регистрация|Кіру және тіркелу|Sign in and register
+Завершите регистрацию|Тіркелуді аяқтаңыз|Complete registration
+Войти через ChatGPT|ChatGPT арқылы кіру|Sign in with ChatGPT
+Войдите через ChatGPT, затем выберите роль заказчика или подрядчика. Дополнительный пароль не нужен.|ChatGPT арқылы кіріп, тапсырыс беруші немесе мердігер рөлін таңдаңыз. Қосымша құпиясөз қажет емес.|Sign in with ChatGPT, then choose Client or Contractor. No additional password is needed.
+Проекты, сметы и согласования сохраняются в облачной базе и доступны участникам с разных устройств.|Жобалар, сметалар және келісімдер бұлттық базада сақталып, қатысушыларға әртүрлі құрылғылардан қолжетімді.|Projects, estimates and approvals are saved in the cloud and available to participants across devices.
+Выберите роль внимательно. Менеджеров назначает администратор.|Рөлді мұқият таңдаңыз. Менеджерлерді әкімші тағайындайды.|Choose your role carefully. Managers are appointed by an administrator.
+Выйти из аккаунта|Аккаунттан шығу|Sign out
+Попробовать без регистрации|Тіркелмей көру|Try without registering
+Открыть деморежим|Демо режимін ашу|Open demo mode
+Вернуться к облачному входу|Бұлттық кіруге оралу|Return to cloud sign in
+Деморежим хранится отдельно в браузере и не изменяет реальные данные.|Демо режимі браузерде бөлек сақталады және нақты деректерді өзгертпейді.|Demo mode is stored separately in your browser and does not change real data.
+Облако · D1|Бұлт · D1|Cloud · D1
 RenoLock AI — бюджет под контролем|RenoLock AI — бюджет бақылауда|RenoLock AI — budget under control
 Согласованные изменения|Келісілген өзгерістер|Approved changes
 Добавьте прайс, опишите работу с явным объёмом для каждой позиции. Например: «Выровнять 20 м2 стен; грунтовка 20 м2».|Прайс қосып, әр позицияның көлемін нақты көрсетіңіз. Мысалы: «Қабырғаны тегістеу 20 м2; қабырғаны астарлау 20 м2».|Add a price list and specify the quantity for each work item. For example: “Wall leveling 20 m2; wall priming 20 m2”.
