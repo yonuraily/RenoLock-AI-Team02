@@ -1,6 +1,6 @@
 const check=(v,m)=>{if(!v)throw Error(m);},stamp=()=>new Date().toISOString();
 const note=v=>{check(typeof v==='string'&&v.trim()&&v.length<=2000,'Добавьте комментарий до 2000 символов');return v.trim();};
-export function ensureLifecycle(s){s.notifications??=[];return s;}
+export function ensureLifecycle(s){s.notifications??=[];s.messages??=[];return s;}
 export function calendarToday(at=Date.now()){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Qyzylorda',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));}
 export function lateDays(end,today=calendarToday()){return /^\d{4}-\d{2}-\d{2}$/.test(end||'')?Math.max(0,Math.floor((Date.parse(today)-Date.parse(end))/86400000)):0;}
 function validDate(value){check(typeof value==='string'&&/^20\d{2}-\d{2}-\d{2}$/.test(value),'Укажите дату в формате ГГГГ-ММ-ДД');const time=Date.parse(value);check(Number.isFinite(time)&&new Date(time).toISOString().slice(0,10)===value,'Некорректная календарная дата');return value;}
@@ -8,10 +8,21 @@ function target(s,u,d){
  check(['project','estimate'].includes(d.scope),'Выберите вид работ');const t=d.scope==='project'?s.projects.find(p=>p.id===d.id):s.estimates.find(e=>e.id===d.id&&e.status==='approved');check(t,'Работы недоступны');
  const p=d.scope==='project'?t:s.projects.find(p=>p.id===t.projectId);check(p&&[p.contractorId,p.clientId].includes(u.id),'Проект недоступен');check(!p.completedAt,'Проект завершён');return {t,p};
 }
-export function lifecycleView(s,u,payload){const projects=new Set(payload.projects.map(p=>p.id)),requests=new Set((payload.requests||[]).map(r=>r.id));return {...payload,notifications:(s.notifications||[]).filter(n=>n.userId===u.id&&(!n.projectId||projects.has(n.projectId))&&(!n.requestId||requests.has(n.requestId))).slice().reverse()};}
+export function lifecycleView(s,u,payload){const projects=new Set(payload.projects.map(p=>p.id)),requests=new Set((payload.requests||[]).map(r=>r.id)),chatProjects=new Set(payload.projects.filter(p=>['client','contractor'].includes(u.role)&&[p.clientId,p.contractorId].includes(u.id)).map(p=>p.id));return {...payload,messages:(s.messages||[]).filter(m=>chatProjects.has(m.projectId)),notifications:(s.notifications||[]).filter(n=>n.userId===u.id&&(!n.projectId||projects.has(n.projectId))&&(!n.requestId||requests.has(n.requestId))).slice().reverse()};}
 export function canClose(s,p){check(p.acceptance?.status==='accepted','Сначала примите основные работы проекта');check(!s.estimates.some(e=>e.projectId===p.id&&e.status==='approved'&&e.acceptance?.status!=='accepted'),'Сначала примите все согласованные дополнительные работы');}
 export function lifecycleMutate(s,u,action,d){
  ensureLifecycle(s);
+ if(action==='chat.read'){
+  const p=s.projects.find(p=>p.id===d.projectId);check(p&&['client','contractor'].includes(u.role)&&[p.clientId,p.contractorId].includes(u.id),'Чат доступен только заказчику и подрядчику проекта');for(const n of s.notifications.filter(n=>n.chat&&n.userId===u.id&&n.projectId===p.id))n.readAt??=stamp();return {ok:true};
+ }
+ if(action==='chat.send'){
+  const p=s.projects.find(p=>p.id===d.projectId);check(p&&['client','contractor'].includes(u.role)&&[p.clientId,p.contractorId].includes(u.id),'Чат доступен только заказчику и подрядчику проекта');
+  check(typeof d.clientMessageId==='string'&&/^[a-zA-Z0-9-]{16,80}$/.test(d.clientMessageId),'Некорректный идентификатор сообщения');const body=note(d.text);
+  const previous=s.messages.find(m=>m.projectId===p.id&&m.senderId===u.id&&m.clientMessageId===d.clientMessageId);if(previous){check(previous.text===body,'Идентификатор сообщения уже использован');return {id:previous.id,duplicate:true};}
+  check(!p.completedAt,'Проект завершён. Переписка доступна только для чтения');
+  const message={id:crypto.randomUUID(),projectId:p.id,senderId:u.id,sender:u.name,text:body,clientMessageId:d.clientMessageId,at:stamp()};s.messages.push(message);
+  const userId=u.id===p.clientId?p.contractorId:p.clientId;s.notifications.push({id:crypto.randomUUID(),userId,title:'Новое сообщение в проекте',context:p.name,projectId:p.id,requestId:null,estimateId:null,chat:true,actor:u.name,at:message.at,readAt:null});return {id:message.id};
+ }
  if(action==='notification.read'){
   const own=s.notifications.filter(n=>n.userId===u.id&&(d.all===true||n.id===d.id));check(d.all===true||own.length,'Уведомление недоступно');for(const n of own)n.readAt??=stamp();return {ok:true};
  }

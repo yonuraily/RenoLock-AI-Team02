@@ -1,6 +1,19 @@
 import {staffTranslations} from './staff-translations.js';
 // Interface copy only. Stored user data and API enum values are never rewritten.
 const rows=`
+Чат проекта|Жоба чаты|Project chat
+Обсуждение ремонта|Жөндеуді талқылау|Renovation discussion
+Переписка проекта|Жоба хат алмасуы|Project conversation
+Ваше сообщение|Сіздің хабарламаңыз|Your message
+Отправить сообщение|Хабарлама жіберу|Send message
+Обновить чат|Чатты жаңарту|Refresh chat
+Напишите о ремонте…|Жөндеу туралы жазыңыз…|Write about the renovation…
+Новое сообщение в проекте|Жобада жаңа хабарлама|New project message
+Сообщений пока нет. Обсудите ремонт с участником проекта.|Әзірге хабарламалар жоқ. Жөндеуді жоба қатысушысымен талқылаңыз.|No messages yet. Discuss the renovation with your project participant.
+До 2000 символов. Новые сообщения проверяются каждые 20 секунд.|2000 таңбаға дейін. Жаңа хабарламалар әр 20 секунд сайын тексеріледі.|Up to 2000 characters. New messages are checked every 20 seconds.
+Чат доступен только заказчику и подрядчику проекта|Чат тек жобаның тапсырыс берушісі мен мердігеріне қолжетімді|Chat is available only to the project's client and contractor
+Проект завершён. Переписка доступна только для чтения|Жоба аяқталды. Хат алмасуды тек оқуға болады|Project completed. Conversation is read-only
+Переписку видят только заказчик и подрядчик этого проекта. Сообщение не утверждает смету, перенос сроков или приёмку — используйте соответствующие действия.|Хат алмасуды тек осы жобаның тапсырыс берушісі мен мердігері көреді. Хабарлама сметаны, мерзім ауыстыруды немесе қабылдауды бекітпейді — тиісті әрекеттерді пайдаланыңыз.|Only this project's client and contractor can see the conversation. A message does not approve an estimate, date change or work acceptance — use the corresponding actions.
 Уведомления|Хабарламалар|Notifications
 Прочитать все|Барлығын оқу|Mark all read
 Новое|Жаңа|New

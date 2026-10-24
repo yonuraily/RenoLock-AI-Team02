@@ -1,6 +1,16 @@
 # RenoLock AI Software Requirements Specification
 
-Version 1.6 · MVP · 24 October 2026
+Version 1.7 · MVP · 24 October 2026
+
+## Current release 1.7 — private project messaging
+
+FR-42: The client and contractor assigned to a project may exchange plain-text messages of 1–2000 characters. Author identity and timestamp are set by the server, ignoring submitted author fields. API state filters messages by actual participant membership; staff and other users receive no chat records. Message text is escaped for display and rendered without HTML execution. Completed project chats are read-only.
+
+FR-43: Successful message creation and a notification to the other participant are saved atomically in application state. A stable per-sender/project clientMessageId makes retries idempotent; reuse with changed text is rejected. The sender is not self-notified and staff receive no message notification. Opening a chat marks its recipient's chat notifications read. Notification links open the relevant project chat.
+
+FR-44: The open workspace polls messages every 20 seconds and supports manual refresh. Updating the message list preserves the compose field and reading scroll position unless already at the bottom. There are no push/email deliveries, attachments or interpersonal read receipts. User-authored messages are not translated when switching RU/KK/EN. Chat messages do not alter budget, dates, financial approvals or acceptance.
+
+Validation: 58 tests, including persistence, recipient privacy, staff exclusion, author-spoofing rejection, invalid-size rejection, duplicate prevention and read-only completed chats. Historical communication descriptions below are superseded by FR-42–FR-44.
 
 ## Current release 1.6 — scheduling, acceptance and notifications
 

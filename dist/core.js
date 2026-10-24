@@ -116,6 +116,6 @@ export function mutate(state,user,action,data){
  ensurePlatform(state);const actor=state.users.find(u=>u.id===user?.id);assert(actor&&!actor.blocked,'Аккаунт недоступен');
  if(action==='project.complete'){const p=state.projects.find(p=>p.id===data.id&&p.clientId===actor.id);assert(p,'Проект недоступен');canClose(state,p);}
  if(action==='estimate.progress'){const e=state.estimates.find(e=>e.id===data.id);assert(!['awaiting','accepted'].includes(e?.acceptance?.status),'Работы переданы на приёмку или приняты');}
- const result=/^(notification\.|schedule\.|acceptance\.|work\.)/.test(action)?lifecycleMutate(state,actor,action,data):mutateCore(state,actor,action,data);
+ const result=/^(chat\.|notification\.|schedule\.|acceptance\.|work\.)/.test(action)?lifecycleMutate(state,actor,action,data):mutateCore(state,actor,action,data);
  notifyMutation(state,actor,action,data,result);return result;
 }
