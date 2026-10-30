@@ -18,7 +18,11 @@ export function initI18n({protectedTexts=()=>new Set()}={}){
  const skip=el=>el?.closest('[data-no-i18n],script,style,textarea,input,[contenteditable="true"]');
  function update(){
   observer.disconnect();queued=false;document.documentElement.lang=language;document.title=translateText('RenoLock AI — бюджет под контролем');
-  const dialog=document.querySelector('dialog[open]'),host=dialog||document.body;if(selector.parentElement!==host)host.append(selector);
+  // Keep language controls in the persistent top navigation so they are
+  // immediately visible on every dashboard screen. Auth pages still use the
+  // fixed top-right fallback because they do not render a dashboard header.
+  const topbar=document.querySelector('.topbar-right'),host=topbar||document.body;
+  if(selector.parentElement!==host)host.append(selector);
   const protectedSet=protectedTexts();
   // Preserve option identifiers before translating their visible labels.
   for(const option of document.querySelectorAll('option'))if(!option.hasAttribute('value'))option.setAttribute('value',option.textContent);
