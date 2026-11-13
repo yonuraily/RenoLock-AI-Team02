@@ -1,3 +1,5 @@
+Educational project for the course Business Analysis, Astana IT University. Not a real product or service. All data are fictional.
+
 # RenoLock AI
 
 Работающий демонстрационный MVP управления бюджетом ремонта и согласования дополнительных работ. Интерфейс на русском, роли Contractor и Client, валюта KZT.
